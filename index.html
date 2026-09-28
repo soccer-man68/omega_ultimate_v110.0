@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>OMEGA DNA-SYNC v109.1 Mobile</title>
+  <!-- 엑셀(.xlsx) 파일 파싱 라이브러리 CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #020617;
+      --card-bg: #0f172a;
+      --header-bg: #1e1b4b;
+      --accent-gold: #fbbf24;
+      --accent-cyan: #38bdf8;
+      --accent-purple: #7c3aed;
+      --accent-green: #22c55e;
+      --border-color: #334155;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
+
+    /* --- [보안 잠금 화면] --- */
+    #lock-screen {
+      position: fixed; inset: 0; background: #020617;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      z-index: 9999; padding: 20px;
+    }
+    .lock-box {
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: 20px; padding: 30px 25px; width: 100%; max-width: 340px;
+      text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+    .lock-title { font-size: 22px; font-weight: bold; color: var(--accent-gold); margin-bottom: 8px; }
+    .lock-sub { font-size: 13px; color: var(--accent-cyan); margin-bottom: 25px; }
+    .pin-input {
+      width: 100%; height: 50px; font-size: 24px; text-align: center; letter-spacing: 12px;
+      background: #000; border: 2px solid var(--accent-purple); border-radius: 12px;
+      color: #fff; outline: none; margin-bottom: 15px;
+    }
+    .pin-btn {
+      width: 100%; height: 50px; background: var(--accent-purple); color: white;
+      font-size: 16px; font-weight: bold; border: none; border-radius: 12px;
+      cursor: pointer; transition: 0.2s;
+    }
+    .pin-btn:active { transform: scale(0.98); background: #6d28d9; }
+    .err-msg { color: #ef4444; font-size: 13px; margin-top: 10px; display: none; }
+
+    /* --- [메인 레이아웃] --- */
+    #app-container { display: none; padding-bottom: 30px; }
+    header { background: var(--header-bg); padding: 20px 15px; text-align: center; border-bottom: 2px solid #312e81; }
+    header h1 { font-size: 22px; color: var(--accent-gold); font-weight: 900; letter-spacing: 0.5px; }
+    header p { font-size: 12px; color: var(--accent-cyan); margin-top: 4px; font-family: monospace; }
+
+    .main-wrap { max-width: 600px; margin: 0 auto; padding: 15px; }
+    .card {
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: 14px; padding: 15px; margin-bottom: 15px;
+    }
+
+    /* 컨트롤 영역 */
+    .ctrl-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .file-btn {
+      background: #1e3a8a; color: white; padding: 10px 16px; border-radius: 8px;
+      font-size: 13px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center;
+      border: none;
+    }
+    #excel-input { display: none; }
+    .status-text { font-size: 13px; color: var(--text-muted); flex: 1; text-align: right; }
+
+    .range-selector { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; }
+    select {
+      background: #000; color: #fff; border: 1px solid var(--border-color);
+      padding: 6px 12px; border-radius: 6px; outline: none; font-size: 13px;
+    }
+
+    /* 실행 버튼들 */
+    .btn-action {
+      width: 100%; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;
+      display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 10px;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn-action:active { transform: scale(0.98); }
+    .btn-normal { background: #ca8a04; color: #fff; padding: 14px; font-size: 15px; }
+    .btn-hunt { background: #7c3aed; color: #fff; padding: 16px; font-size: 16px; }
+    .btn-stop { background: #4b5563 !important; }
+
+    /* 프로그레스바 */
+    .progress-bar-wrap {
+      width: 100%; height: 8px; background: #000; border-radius: 4px; overflow: hidden; margin-bottom: 12px;
+    }
+    .progress-fill { width: 0%; height: 100%; background: var(--accent-cyan); transition: width 0.1s; }
+
+    /* 결과 터미널 화면 */
+    .terminal {
+      background: #000; border: 1px solid var(--border-color); border-radius: 12px;
+      padding: 15px; min-height: 250px; max-height: 480px; overflow-y: auto;
+      font-family: "Consolas", monospace; font-size: 13px; line-height: 1.6;
+    }
+    .log-header { color: #e879f9; font-weight: bold; font-size: 14px; }
+    .log-info { color: var(--accent-cyan); }
+    .log-target { color: var(--accent-gold); font-weight: bold; }
+    .log-win { color: var(--accent-green); font-weight: bold; }
+    .log-dna { color: #e879f9; font-weight: bold; }
+    .log-fail { color: #64748b; }
+
+    /* 로또 볼 스타일 뱃지 */
+    .ball {
+      display: inline-flex; justify-content: center; align-items: center;
+      width: 28px; height: 28px; border-radius: 50%; color: #fff; font-size: 12px;
+      font-weight: bold; margin: 2px; text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+    .b-yellow { background: #f59e0b; }
+    .b-blue { background: #3b82f6; }
+    .b-red { background: #ef4444; }
+    .b-gray { background: #6b7280; }
+    .b-green { background: #10b981; }
+  </style>
+</head>
+<body>
+
+  <!-- [잠금 화면 (PIN 4938)] -->
+  <div id="lock-screen">
+    <div class="lock-box">
+      <div class="lock-title">OMEGA DNA V109.1</div>
+      <div class="lock-sub">보안 인증이 필요합니다</div>
+      <input type="password" id="pin-field" class="pin-input" maxlength="4" placeholder="••••" pattern="[0-9]*" inputmode="numeric">
+      <button class="pin-btn" onclick="checkPin()">인증 및 접속</button>
+      <div id="err-text" class="err-msg">비밀번호가 일치하지 않습니다.</div>
+    </div>
+  </div>
+
+  <!-- [메인 어플리케이션 화면] -->
+  <div id="app-container">
+    <header>
+      <h1>OMEGA DNA-SYNC v109.1</h1>
+      <p>Mobile Edition · DNA Hybrid Engine</p>
+    </header>
+
+    <div class="main-wrap">
+      <!-- 데이터 로드 카드 -->
+      <div class="card">
+        <div class="ctrl-row">
+          <label class="file-btn" for="excel-input">
+            📁 데이터 파일(.xlsx) 선택
+          </label>
+          <input type="file" id="excel-input" accept=".xlsx, .xls">
+          <div id="data-status" class="status-text">데이터 대기 중</div>
+        </div>
+
+        <div class="range-selector">
+          <span>분석범위(회차):</span>
+          <select id="test-count">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="30">30</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 실행 버튼 영역 -->
+      <button class="btn-action btn-normal" onclick="runNormalPrediction()">
+        🎯 일반 분석 (고속 DNA 풀 + 최신 골든 코어)
+      </button>
+
+      <button id="hunt-btn" class="btn-action btn-hunt" onclick="toggleHunting()">
+        🧬 DNA 추출 헌팅 시작 (5적중 심층 탐색)
+      </button>
+
+      <!-- 프로그레스바 -->
+      <div class="progress-bar-wrap">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+
+      <!-- 로그 결과 출력창 -->
+      <div id="terminal" class="terminal">
+        <div class="log-info">엑셀 데이터 파일을 불러온 후 [일반 분석] 또는 [DNA 추출 헌팅]을 실행하세요.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- [1. 보안 PIN 인증 로직] ---
+    function checkPin() {
+      const pin = document.getElementById("pin-field").value.trim();
+      const err = document.getElementById("err-text");
+      if (pin === "4938") {
+        document.getElementById("lock-screen").style.display = "none";
+        document.getElementById("app-container").style.display = "block";
+      } else {
+        err.style.display = "block";
+        document.getElementById("pin-field").value = "";
+      }
+    }
+    // 엔터키 지원
+    document.getElementById("pin-field").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") checkPin();
+    });
+
+    // --- [2. 데이터 저장소 및 파일 로더] ---
+    let processedAll = [];
+    let isHunting = false;
+    let stopHuntingFlag = false;
+
+    document.getElementById("excel-input").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+          processedAll = [];
+          for (let r of rows) {
+            if (!r || r[0] == null || r[1] == null) continue;
+            try {
+              const drawNo = parseInt(r[0]);
+              const mainNums = [r[1], r[2], r[3], r[4], r[5], r[6]].map(Number).sort((a,b)=>a-b);
+              const bonusNum = parseInt(r[7] || 0);
+              if (!isNaN(drawNo) && mainNums.length === 6 && !mainNums.some(isNaN)) {
+                processedAll.push({ drawNo, mainNums, bonusNum });
+              }
+            } catch(e) {}
+          }
+
+          processedAll.sort((a,b) => a.drawNo - b.drawNo);
+          if (processedAll.length > 0) {
+            const lastRound = processedAll[processedAll.length - 1].drawNo;
+            const statusLbl = document.getElementById("data-status");
+            statusLbl.innerText = `로드 완료: ${lastRound}회 (${processedAll.length}개 회차)`;
+            statusLbl.style.color = "#fbbf24";
+            appendLog(`▶ 데이터 파일 로드 성공! 최근 회차: ${lastRound}회`, "win");
+          }
+        } catch (err) {
+          alert("파일을 읽는 도중 오류가 발생했습니다: " + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // --- [3. 로또 유틸 함수] ---
+    const allNums = Array.from({length: 45}, (_, i) => i + 1);
+
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+
+    function appendLog(html, className = "") {
+      const term = document.getElementById("terminal");
+      const div = document.createElement("div");
+      if (className) div.className = className;
+      div.innerHTML = html;
+      term.appendChild(div);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById("terminal").innerHTML = "";
+    }
+
+    function getBallHtml(n) {
+      let colorClass = "b-yellow";
+      if (n >= 11 && n <= 20) colorClass = "b-blue";
+      else if (n >= 21 && n <= 30) colorClass = "b-red";
+      else if (n >= 31 && n <= 40) colorClass = "b-gray";
+      else if (n >= 41) colorClass = "b-green";
+      return `<span class="ball ${colorClass}">${n}</span>`;
+    }
+
+    function formatSet(nums) {
+      return nums.map(n => getBallHtml(n)).join(" ");
+    }
+
+    // --- [4. OMEGA V109.1 엔진 코어 로직] ---
+
+    // 4-1. 기본 21수 풀 및 점수 계산 (단일 회차용)
+    function getSyncPool21(dataset) {
+      const rawDraws = dataset.map(d => d.mainNums);
+      const recent30 = rawDraws.slice(-30);
+      
+      const gaps = {};
+      for (let n of allNums) {
+        let gap = 30;
+        for (let idx = 0; idx < recent30.length; idx++) {
+          if (recent30[recent30.length - 1 - idx].includes(n)) {
+            gap = idx;
+            break;
+          }
+        }
+        gaps[n] = gap;
+      }
+
+      const scores = {};
+      const last15 = rawDraws.slice(-15);
+      for (let n of allNums) {
+        const freq = last15.filter(d => d.includes(n)).length;
+        scores[n] = (freq * rand(18, 24)) + (Math.min(gaps[n], 15) * rand(2.5, 3.5)) + rand(0, 15);
+      }
+
+      const hot = allNums.filter(n => gaps[n] <= 5).sort((a,b) => scores[b] - scores[a]).slice(0, 7);
+      const warm = allNums.filter(n => gaps[n] > 5 && gaps[n] <= 12).sort((a,b) => scores[b] - scores[a]).slice(0, 7);
+      const cold = allNums.filter(n => gaps[n] > 12).sort((a,b) => scores[b] - scores[a]).slice(0, 7);
+
+      let pool = Array.from(new Set([...hot, ...warm, ...cold]));
+      while (pool.length < 21) {
+        let r = allNums[Math.floor(Math.random() * allNums.length)];
+        if (!pool.includes(r)) pool.push(r);
+      }
+      const pool21 = pool.slice(0, 21).sort((a,b) => a - b);
+
+      let cores = [];
+      if (hot.length) cores.push(hot[0]);
+      if (warm.length) cores.push(warm[0]);
+      if (cold.length) cores.push(cold[0]);
+
+      if (cores.length < 3) {
+        let remain = pool21.filter(n => !cores.includes(n)).sort((a,b) => scores[b] - scores[a]);
+        cores.push(...remain.slice(0, 3 - cores.length));
+      }
+      return { pool: pool21, cores: cores.sort((a,b) => a - b) };
+    }
+
+    // 4-2. [일반분석용] 백테스팅 고속 DNA 풀(21수) 추출
+    function extractDnaPoolForNormal(numTest = 20) {
+      const totalLen = processedAll.length;
+      const startIdx = Math.max(0, totalLen - numTest);
+
+      let hit5Pools = [];
+      let hit4Pools = [];
+
+      for (let i = startIdx; i < totalLen; i++) {
+        const targetMain = new Set(processedAll[i].mainNums);
+        const subData = processedAll.slice(0, i);
+        const { pool } = getSyncPool21(subData);
+
+        const hits = pool.filter(n => targetMain.has(n)).length;
+        if (hits >= 5) hit5Pools.push(pool);
+        else if (hits === 4) hit4Pools.push(pool);
+      }
+
+      let selected = hit5Pools.length >= 2 ? hit5Pools : [...hit5Pools, ...hit4Pools];
+      if (selected.length === 0) selected = [getSyncPool21(processedAll).pool];
+
+      // 성공 풀 다수결 집계
+      const counter = {};
+      selected.flat().forEach(n => counter[n] = (counter[n] || 0) + 1);
+      let dnaPool = Object.keys(counter).map(Number).sort((a,b) => counter[b] - counter[a]).slice(0, 21);
+
+      while (dnaPool.length < 21) {
+        let r = allNums[Math.floor(Math.random() * allNums.length)];
+        if (!dnaPool.includes(r)) dnaPool.push(r);
+      }
+      return { dnaPool: dnaPool.sort((a,b) => a - b), hit5Count: hit5Pools.length };
+    }
+
+    // 4-3. [일반분석용] 1243회차 교훈 반영 골든 리바운드 코어 선출
+    function pickCoresFromDnaPool(dnaPool) {
+      const rawDraws = processedAll.map(d => d.mainNums);
+      const lastDraw = rawDraws[rawDraws.length - 1] || [];
+
+      const gaps = {};
+      for (let n of allNums) {
+        let gap = 30;
+        for (let idx = 0; idx < rawDraws.length; idx++) {
+          if (rawDraws[rawDraws.length - 1 - idx].includes(n)) {
+            gap = idx;
+            break;
+          }
+        }
+        gaps[n] = gap;
+      }
+
+      const scores = {};
+      const last10 = rawDraws.slice(-10);
+      for (let n of dnaPool) {
+        const gap = gaps[n];
+        const f10 = last10.filter(d => d.includes(n)).length;
+        let score = 0.0;
+
+        // 골든 리바운드 존 가중치 (2~5주차 최우선)
+        if (gap >= 2 && gap <= 5) score += 45.0;
+        else if (gap === 1) score += 30.0;
+        else if (gap === 0) score += 20.0;
+        else if (gap >= 6 && gap <= 9) score += 25.0;
+        else score += 5.0;
+
+        if (f10 === 2 || f10 === 3) score += 35.0;
+        else if (f10 >= 4) score += 15.0;
+        else if (f10 === 1) score += 20.0;
+
+        score += rand(0, 5);
+        scores[n] = score;
+      }
+
+      const topCandidates = [...dnaPool].sort((a,b) => scores[b] - scores[a]).slice(0, 6);
+      let cores = [topCandidates[0]];
+
+      for (let i = 1; i < topCandidates.length; i++) {
+        if (cores.length >= 3) break;
+        const cand = topCandidates[i];
+        const candZone = Math.floor(cand / 10);
+        const zones = cores.map(c => Math.floor(c / 10));
+        if (zones.filter(z => z === candZone).length < 2) {
+          cores.push(cand);
+        }
+      }
+
+      for (let cand of topCandidates) {
+        if (cores.length >= 3) break;
+        if (!cores.includes(cand)) cores.push(cand);
+      }
+      return cores.sort((a,b) => a - b);
+    }
+
+    // 4-4. 고속 스마트 5조합 생성 필터
+    function generateSmartSets(pool, cores, count = 5) {
+      const finalSets = [];
+      let attempts = 0;
+
+      while (finalSets.length < count && attempts < 3000) {
+        attempts++;
+        const corePickCount = Math.random() < 0.5 ? 1 : 2;
+        const shuffledCores = [...cores].sort(() => 0.5 - Math.random());
+        const base = shuffledCores.slice(0, corePickCount);
+
+        const others = pool.filter(n => !base.includes(n)).sort(() => 0.5 - Math.random());
+        const combo = [...base, ...others.slice(0, 6 - base.length)].sort((a,b) => a - b);
+
+        const sum = combo.reduce((a,b) => a + b, 0);
+        if (sum < 90 || sum > 185) continue;
+
+        const oddCnt = combo.filter(n => n % 2 !== 0).length;
+        if (![2, 3, 4].includes(oddCnt)) continue;
+
+        // 차이값(diff) 분산 필터
+        const diffs = new Set();
+        for (let i = 0; i < combo.length; i++) {
+          for (let j = i + 1; j < combo.length; j++) {
+            diffs.add(Math.abs(combo[i] - combo[j]));
+          }
+        }
+        if (diffs.size - 5 < 7) continue;
+
+        const key = combo.join(",");
+        if (!finalSets.some(s => s.join(",") === key)) {
+          finalSets.push(combo);
+        }
+      }
+
+      while (finalSets.length < count) {
+        const fallback = [...pool].sort(() => 0.5 - Math.random()).slice(0, 6).sort((a,b) => a - b);
+        finalSets.push(fallback);
+      }
+      return finalSets;
+    }
+
+    // --- [5. 실행 기능 (일반분석 / DNA 헌팅)] ---
+
+    // 🎯 일반 분석 실행
+    function runNormalPrediction() {
+      if (processedAll.length === 0) {
+        alert("먼저 엑셀 데이터 파일을 불러와주세요.");
+        return;
+      }
+      clearLog();
+      const numTest = parseInt(document.getElementById("test-count").value);
+      const nextDraw = processedAll[processedAll.length - 1].drawNo + 1;
+
+      appendLog(`=== [일반 분석 (DNA 풀 + 최신 골든 코어)] ===`, "log-header");
+      appendLog(`▶ 과거 ${numTest}회차 백테스팅 성공 풀 교집합(DNA) 추출 중...`, "log-info");
+
+      setTimeout(() => {
+        const { dnaPool, hit5Count } = extractDnaPoolForNormal(numTest);
+        const cores = pickCoresFromDnaPool(dnaPool);
+        const sets = generateSmartSets(dnaPool, cores, 5);
+
+        appendLog(`▶ DNA 분석 완료 (검증된 5적중 회차 풀 ${hit5Count}개 반영)`, "log-dna");
+        appendLog(`▶ [${nextDraw}회차] 추천 21수 풀:`, "log-info");
+        appendLog(`&nbsp;&nbsp;[ ${dnaPool.join(", ")} ]`);
+        appendLog(`▶ [골든 리바운드] 핵심 코어 3수:`, "log-win");
+        appendLog(`&nbsp;&nbsp;${formatSet(cores)}<br>`);
+
+        appendLog(`★ [최종 추천 5개 조합] ★`, "log-target");
+        sets.forEach((s, idx) => {
+          appendLog(`조합 ${idx + 1}: ${formatSet(s)}`);
+        });
+      }, 50);
+    }
+
+    // 🧬 DNA 심층 헌팅 토글 및 실행
+    async function toggleHunting() {
+      if (processedAll.length === 0) {
+        alert("먼저 엑셀 데이터 파일을 불러와주세요.");
+        return;
+      }
+
+      const huntBtn = document.getElementById("hunt-btn");
+      if (isHunting) {
+        stopHuntingFlag = true;
+        huntBtn.innerText = "🧬 DNA 추출 헌팅 시작";
+        huntBtn.classList.remove("btn-stop");
+        isHunting = false;
+        return;
+      }
+
+      isHunting = true;
+      stopHuntingFlag = false;
+      huntBtn.innerText = "🛑 헌팅 중지";
+      huntBtn.classList.add("btn-stop");
+
+      const numTest = parseInt(document.getElementById("test-count").value);
+      const totalLen = processedAll.length;
+      const startIdx = Math.max(0, totalLen - numTest);
+      let attempt = 0;
+
+      while (!stopHuntingFlag) {
+        attempt++;
+        clearLog();
+        appendLog(`▶ [시도 ${attempt}] 5개 적중 DNA 탐색 중...`, "log-info");
+
+        const successDnaPools = [];
+        const successDnaCores = [];
+        const hitRounds = [];
+
+        for (let i = startIdx; i < totalLen; i++) {
+          if (stopHuntingFlag) break;
+          const targetRn = processedAll[i].drawNo;
+          const targetMain = new Set(processedAll[i].mainNums);
+          const subData = processedAll.slice(0, i);
+
+          const { pool, cores } = getSyncPool21(subData);
+          const hits = pool.filter(n => targetMain.has(n)).length;
+
+          if (hits >= 5) {
+            successDnaPools.push(pool);
+            successDnaCores.push(cores);
+            hitRounds.push(targetRn);
+            appendLog(`[${targetRn}회] 21수 중 ${hits}개 적중! DNA 확보 ★`, "log-dna");
+          } else {
+            appendLog(`[${targetRn}회] 21수 중 ${hits}개 적중`, "log-fail");
+          }
+
+          document.getElementById("progress-fill").style.width = `${((i - startIdx + 1) / numTest) * 100}%`;
+          await new Promise(r => setTimeout(r, 20)); // 화면 갱신
+        }
+
+        if (hitRounds.length >= 2) {
+          appendLog(`<br>[DNA 확보 성공] ${hitRounds.join(", ")} 회차의 성공 패턴을 분석합니다.`, "log-dna");
+
+          const allPoolNums = successDnaPools.flat();
+          const pCounter = {};
+          allPoolNums.forEach(n => pCounter[n] = (pCounter[n] || 0) + 1);
+          const dnaPool = Object.keys(pCounter).map(Number).sort((a,b) => pCounter[b] - pCounter[a]).slice(0, 21).sort((a,b)=>a-b);
+
+          const allCoreNums = successDnaCores.flat();
+          const cCounter = {};
+          allCoreNums.forEach(n => cCounter[n] = (cCounter[n] || 0) + 1);
+          const dnaCores = Object.keys(cCounter).map(Number).sort((a,b) => cCounter[b] - cCounter[a]).slice(0, 3).sort((a,b)=>a-b);
+
+          const nextDraw = processedAll[processedAll.length - 1].drawNo + 1;
+          appendLog(`<br>========================================`, "log-info");
+          appendLog(`★ [${nextDraw}회차] DNA 심층 분석 최종 결과 ★`, "log-header");
+          appendLog(`========================================`, "log-info");
+          appendLog(`추출된 DNA 풀: [ ${dnaPool.join(", ")} ]`, "log-win");
+          appendLog(`추출된 DNA 코어: ${formatSet(dnaCores)}<br>`, "log-target");
+
+          const finalSets = generateSmartSets(dnaPool, dnaCores, 5);
+          finalSets.forEach((s, idx) => {
+            appendLog(`최종 조합 ${idx + 1}: ${formatSet(s)}`, "log-target");
+          });
+          break;
+        }
+        await new Promise(r => setTimeout(r, 50));
+      }
+
+      huntBtn.innerText = "🧬 DNA 추출 헌팅 시작 (5개 적중 집중 탐색)";
+      huntBtn.classList.remove("btn-stop");
+      isHunting = false;
+    }
+  </script>
+</body>
+</html>
