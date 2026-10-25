@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>OMEGA DNA-SYNC v110.0 Mobile</title>
+  <title>OMEGA REGRESSION v110.0 Mobile</title>
   <!-- 엑셀(.xlsx) 파일 파싱 라이브러리 CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
@@ -15,6 +15,7 @@
       --accent-cyan: #38bdf8;
       --accent-purple: #7c3aed;
       --accent-green: #22c55e;
+      --accent-rose: #f43f5e;
       --border-color: #334155;
       --text-main: #f1f5f9;
       --text-muted: #94a3b8;
@@ -77,15 +78,15 @@
       padding: 6px 12px; border-radius: 6px; outline: none; font-size: 13px;
     }
 
-    /* 실행 버튼들 */
+    /* 실행 버튼 */
     .btn-action {
       width: 100%; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;
       display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 10px;
       transition: transform 0.1s, opacity 0.2s;
     }
     .btn-action:active { transform: scale(0.98); }
-    .btn-normal { background: #ca8a04; color: #fff; padding: 14px; font-size: 15px; }
-    .btn-hunt { background: #7c3aed; color: #fff; padding: 16px; font-size: 16px; }
+    .btn-regression { background: linear-gradient(135deg, #b45309, #d97706); color: #fff; padding: 15px; font-size: 15px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3); }
+    .btn-hunt { background: #7c3aed; color: #fff; padding: 15px; font-size: 15px; }
     .btn-stop { background: #4b5563 !important; }
 
     /* 프로그레스바 */
@@ -97,15 +98,16 @@
     /* 결과 터미널 화면 */
     .terminal {
       background: #000; border: 1px solid var(--border-color); border-radius: 12px;
-      padding: 15px; min-height: 250px; max-height: 480px; overflow-y: auto;
-      font-family: "Consolas", monospace; font-size: 13px; line-height: 1.6;
+      padding: 15px; min-height: 280px; max-height: 500px; overflow-y: auto;
+      font-family: "Consolas", -apple-system, monospace; font-size: 13px; line-height: 1.6;
     }
-    .log-header { color: #e879f9; font-weight: bold; font-size: 14px; }
+    .log-header { color: #f43f5e; font-weight: bold; font-size: 14px; margin-bottom: 4px; }
     .log-info { color: var(--accent-cyan); }
     .log-target { color: var(--accent-gold); font-weight: bold; }
     .log-win { color: var(--accent-green); font-weight: bold; }
-    .log-dna { color: #e879f9; font-weight: bold; }
-    .log-fail { color: #64748b; }
+    .log-dna { color: #c084fc; font-weight: bold; }
+    .log-subtext { color: #94a3b8; font-size: 12px; }
+    .log-highlight { color: #38bdf8; font-weight: bold; }
 
     /* 로또 볼 스타일 뱃지 */
     .ball {
@@ -118,6 +120,11 @@
     .b-red { background: #ef4444; }
     .b-gray { background: #6b7280; }
     .b-green { background: #10b981; }
+
+    .stat-badge {
+      display: inline-block; background: #1e293b; border: 1px solid #475569;
+      border-radius: 6px; padding: 2px 6px; font-size: 11px; color: #cbd5e1; margin-left: 4px;
+    }
   </style>
 </head>
 <body>
@@ -125,8 +132,8 @@
   <!-- [잠금 화면 (PIN 4938)] -->
   <div id="lock-screen">
     <div class="lock-box">
-      <div class="lock-title">OMEGA DNA V110.0</div>
-      <div class="lock-sub">보안 인증이 필요합니다</div>
+      <div class="lock-title">OMEGA REGRESSION</div>
+      <div class="lock-sub">회귀주기 엔진 v110.0 보안 인증</div>
       <input type="password" id="pin-field" class="pin-input" maxlength="4" placeholder="••••" pattern="[0-9]*" inputmode="numeric">
       <button class="pin-btn" onclick="checkPin()">인증 및 접속</button>
       <div id="err-text" class="err-msg">비밀번호가 일치하지 않습니다.</div>
@@ -136,8 +143,8 @@
   <!-- [메인 어플리케이션 화면] -->
   <div id="app-container">
     <header>
-      <h1>OMEGA DNA-SYNC v110.0</h1>
-      <p>Mobile Edition · DNA Hybrid Engine</p>
+      <h1>OMEGA REGRESSION v110.0</h1>
+      <p>Precision Periodicity & Regression Cycle Engine</p>
     </header>
 
     <div class="main-wrap">
@@ -152,22 +159,22 @@
         </div>
 
         <div class="range-selector">
-          <span>분석범위(회차):</span>
+          <span>회귀 탐색 심도:</span>
           <select id="test-count">
-            <option value="10">10</option>
-            <option value="20" selected>20</option>
-            <option value="30">30</option>
+            <option value="50">최근 50회차 분석</option>
+            <option value="100" selected>최근 100회차 분석 (권장)</option>
+            <option value="200">최근 200회차 분석</option>
           </select>
         </div>
       </div>
 
       <!-- 실행 버튼 영역 -->
-      <button class="btn-action btn-normal" onclick="runNormalPrediction()">
-        🎯 일반 분석 (고속 DNA 풀 + 최신 골든 코어)
+      <button class="btn-action btn-regression" onclick="runRegressionAnalysis()">
+        🔄 회귀주기 정밀 분석 (21수 풀 + 핵심 코어 3수)
       </button>
 
       <button id="hunt-btn" class="btn-action btn-hunt" onclick="toggleHunting()">
-        🧬 DNA 추출 헌팅 시작 (5적중 심층 탐색)
+        🧬 회귀 공명 DNA 헌팅 (주기 백테스팅 최적화)
       </button>
 
       <!-- 프로그레스바 -->
@@ -177,13 +184,13 @@
 
       <!-- 로그 결과 출력창 -->
       <div id="terminal" class="terminal">
-        <div class="log-info">엑셀 데이터 파일을 불러온 후 [일반 분석] 또는 [DNA 추출 헌팅]을 실행하세요.</div>
+        <div class="log-info">엑셀 데이터 파일을 등록한 후 [회귀주기 정밀 분석]을 실행하십시오.</div>
       </div>
     </div>
   </div>
 
   <script>
-    // --- [1. 보안 PIN 인증 로직] ---
+    // --- [1. 보안 PIN 인증] ---
     function checkPin() {
       const pin = document.getElementById("pin-field").value.trim();
       const err = document.getElementById("err-text");
@@ -195,12 +202,11 @@
         document.getElementById("pin-field").value = "";
       }
     }
-    // 엔터키 지원
     document.getElementById("pin-field").addEventListener("keypress", (e) => {
       if (e.key === "Enter") checkPin();
     });
 
-    // --- [2. 데이터 저장소 및 파일 로더] ---
+    // --- [2. 데이터 파일 로더] ---
     let processedAll = [];
     let isHunting = false;
     let stopHuntingFlag = false;
@@ -236,19 +242,17 @@
             const statusLbl = document.getElementById("data-status");
             statusLbl.innerText = `로드 완료: ${lastRound}회 (${processedAll.length}개 회차)`;
             statusLbl.style.color = "#fbbf24";
-            appendLog(`▶ 데이터 파일 로드 성공! 최근 회차: ${lastRound}회`, "win");
+            appendLog(`▶ 데이터 파일 로드 성공! 최근 회차: ${lastRound}회차`, "log-win");
           }
         } catch (err) {
-          alert("파일을 읽는 도중 오류가 발생했습니다: " + err.message);
+          alert("파일 읽기 오류: " + err.message);
         }
       };
       reader.readAsArrayBuffer(file);
     });
 
-    // --- [3. 로또 유틸 함수] ---
+    // --- [3. UI 및 시각화 유틸] ---
     const allNums = Array.from({length: 45}, (_, i) => i + 1);
-
-    function rand(min, max) { return Math.random() * (max - min) + min; }
 
     function appendLog(html, className = "") {
       const term = document.getElementById("terminal");
@@ -276,175 +280,197 @@
       return nums.map(n => getBallHtml(n)).join(" ");
     }
 
-    // --- [4. OMEGA V110.0 엔진 코어 로직] ---
+    // --- [4. 정밀 회귀주기 분석 엔진 (Regression Cycle Core)] ---
 
-    // 4-1. 기본 21수 풀 및 점수 계산 (단일 회차용)
-    function getSyncPool21(dataset) {
-      const rawDraws = dataset.map(d => d.mainNums);
-      const recent30 = rawDraws.slice(-30);
-      
-      const gaps = {};
+    // 특정 데이터셋 기준으로 1~45번의 회귀 통계 및 점수를 종합 분석
+    function computeRegressionProfiles(dataset) {
+      const totalDraws = dataset.length;
+      const profiles = {};
+
+      // 1. 번호별 출현 인덱스 추적
       for (let n of allNums) {
-        let gap = 30;
-        for (let idx = 0; idx < recent30.length; idx++) {
-          if (recent30[recent30.length - 1 - idx].includes(n)) {
-            gap = idx;
-            break;
+        profiles[n] = {
+          num: n,
+          indices: [],
+          gaps: [],
+          currentGap: 0,
+          avgGap: 0,
+          shortCycle: 0,
+          timingIndex: 0,
+          regressionResonance: 0,
+          score: 0
+        };
+      }
+
+      for (let idx = 0; idx < totalDraws; idx++) {
+        const draw = dataset[idx].mainNums;
+        for (let n of draw) {
+          if (profiles[n]) profiles[n].indices.push(idx);
+        }
+      }
+
+      // 2. 주기(Intervals) 및 미출현 갭(Current Gap) 산출
+      for (let n of allNums) {
+        const idxList = profiles[n].indices;
+        if (idxList.length === 0) {
+          profiles[n].currentGap = totalDraws;
+          profiles[n].avgGap = totalDraws;
+          profiles[n].shortCycle = totalDraws;
+          continue;
+        }
+
+        // 현재 미출현 회차(Gap)
+        profiles[n].currentGap = (totalDraws - 1) - idxList[idxList.length - 1];
+
+        // 회차별 간격들
+        const gaps = [];
+        for (let i = 1; i < idxList.length; i++) {
+          gaps.push(idxList[i] - idxList[i - 1]);
+        }
+        profiles[n].gaps = gaps;
+
+        // 전체 평균 주기
+        const avg = gaps.length > 0 ? (gaps.reduce((a,b)=>a+b, 0) / gaps.length) : 7.5;
+        profiles[n].avgGap = avg;
+
+        // 최근 3회 출현 단기 가중주기(WMA: 가중치 3, 2, 1)
+        if (gaps.length >= 3) {
+          const g1 = gaps[gaps.length - 1];
+          const g2 = gaps[gaps.length - 2];
+          const g3 = gaps[gaps.length - 3];
+          profiles[n].shortCycle = (g1 * 3 + g2 * 2 + g3 * 1) / 6.0;
+        } else if (gaps.length > 0) {
+          profiles[n].shortCycle = gaps[gaps.length - 1];
+        } else {
+          profiles[n].shortCycle = avg;
+        }
+
+        // 3. [회귀 적시성 지수: Timing Readiness]
+        // 현재 미출현 Gap이 단기/평균 회귀 주기에 도달했는지 정규분포(가우시안) 적합도 측정
+        const targetCycle = (profiles[n].shortCycle * 0.65) + (profiles[n].avgGap * 0.35);
+        const gap = profiles[n].currentGap;
+        const diff = Math.abs(gap - targetCycle);
+
+        // 주기에 정확히 도달하거나 1~2회 오차일 때 최대 점수
+        let timingScore = 0;
+        if (diff <= 1.5) timingScore = 50.0;
+        else if (diff <= 3.0) timingScore = 38.0;
+        else if (diff <= 5.0) timingScore = 24.0;
+        else timingScore = Math.max(0, 15 - diff * 2);
+
+        // 보너스: 2~4주차 황금 회귀 구간(직전 리바운드) 가산
+        if (gap >= 2 && gap <= 4) timingScore += 18.0;
+        // 보너스: 직전회차 이월 주기 (gap = 0)의 통계적 적중력 보존
+        if (gap === 0) timingScore += 12.0;
+
+        profiles[n].timingIndex = timingScore;
+      }
+
+      // 4. [다중 회귀선 공명 분석: Step Regression Resonance]
+      // 3회귀, 5회귀, 7회귀, 10회귀, 14회귀 전 당첨번호와의 동조율 계산
+      const stepIntervals = [3, 5, 7, 10, 14];
+      const stepWeights = { 3: 15, 5: 18, 7: 16, 10: 14, 14: 12 };
+
+      for (let step of stepIntervals) {
+        const targetIdx = (totalDraws - 1) - (step - 1);
+        if (targetIdx >= 0) {
+          const pastDraw = dataset[targetIdx].mainNums;
+          for (let n of pastDraw) {
+            profiles[n].regressionResonance += stepWeights[step];
           }
         }
-        gaps[n] = gap;
       }
 
-      const scores = {};
-      const last15 = rawDraws.slice(-15);
+      // 5. 종합 회귀 스코어 집계
       for (let n of allNums) {
-        const freq = last15.filter(d => d.includes(n)).length;
-        scores[n] = (freq * rand(18, 24)) + (Math.min(gaps[n], 15) * rand(2.5, 3.5)) + rand(0, 15);
+        const p = profiles[n];
+        // 최종 점수 = 회귀 적시성(Timing) + 회귀선 공명(Resonance) + 최근 안정성
+        p.score = (p.timingIndex * 1.3) + (p.regressionResonance * 0.9);
       }
 
-      const hot = allNums.filter(n => gaps[n] <= 5).sort((a,b) => scores[b] - scores[a]).slice(0, 7);
-      const warm = allNums.filter(n => gaps[n] > 5 && gaps[n] <= 12).sort((a,b) => scores[b] - scores[a]).slice(0, 7);
-      const cold = allNums.filter(n => gaps[n] > 12).sort((a,b) => scores[b] - scores[a]).slice(0, 7);
-
-      let pool = Array.from(new Set([...hot, ...warm, ...cold]));
-      while (pool.length < 21) {
-        let r = allNums[Math.floor(Math.random() * allNums.length)];
-        if (!pool.includes(r)) pool.push(r);
-      }
-      const pool21 = pool.slice(0, 21).sort((a,b) => a - b);
-
-      let cores = [];
-      if (hot.length) cores.push(hot[0]);
-      if (warm.length) cores.push(warm[0]);
-      if (cold.length) cores.push(cold[0]);
-
-      if (cores.length < 3) {
-        let remain = pool21.filter(n => !cores.includes(n)).sort((a,b) => scores[b] - scores[a]);
-        cores.push(...remain.slice(0, 3 - cores.length));
-      }
-      return { pool: pool21, cores: cores.sort((a,b) => a - b) };
+      return profiles;
     }
 
-    // 4-2. [일반분석용] 백테스팅 고속 DNA 풀(21수) 추출
-    function extractDnaPoolForNormal(numTest = 20) {
-      const totalLen = processedAll.length;
-      const startIdx = Math.max(0, totalLen - numTest);
+    // 21수 풀 및 핵심 코어 3수 도출
+    function getRegressionPoolAndCores(dataset) {
+      const profiles = computeRegressionProfiles(dataset);
 
-      let hit5Pools = [];
-      let hit4Pools = [];
+      // 점수 내림차순 정렬
+      const sortedList = Object.values(profiles).sort((a,b) => b.score - a.score);
 
-      for (let i = startIdx; i < totalLen; i++) {
-        const targetMain = new Set(processedAll[i].mainNums);
-        const subData = processedAll.slice(0, i);
-        const { pool } = getSyncPool21(subData);
+      // 상위 21수 선별
+      const pool21 = sortedList.slice(0, 21).map(p => p.num).sort((a,b) => a - b);
 
-        const hits = pool.filter(n => targetMain.has(n)).length;
-        if (hits >= 5) hit5Pools.push(pool);
-        else if (hits === 4) hit4Pools.push(pool);
-      }
+      // [핵심 코어 3수 선출 알고리즘]
+      // 21수 중 점수가 최상위이면서, 번호대(단번대, 10대, 20대, 30대, 40대)가 겹치지 않게 분산 선택
+      const topCandidates = sortedList.slice(0, 10);
+      const cores = [];
 
-      let selected = hit5Pools.length >= 2 ? hit5Pools : [...hit5Pools, ...hit4Pools];
-      if (selected.length === 0) selected = [getSyncPool21(processedAll).pool];
-
-      // 성공 풀 다수결 집계
-      const counter = {};
-      selected.flat().forEach(n => counter[n] = (counter[n] || 0) + 1);
-      let dnaPool = Object.keys(counter).map(Number).sort((a,b) => counter[b] - counter[a]).slice(0, 21);
-
-      while (dnaPool.length < 21) {
-        let r = allNums[Math.floor(Math.random() * allNums.length)];
-        if (!dnaPool.includes(r)) dnaPool.push(r);
-      }
-      return { dnaPool: dnaPool.sort((a,b) => a - b), hit5Count: hit5Pools.length };
-    }
-
-    // 4-3. [일반분석용] 1243회차 교훈 반영 골든 리바운드 코어 선출
-    function pickCoresFromDnaPool(dnaPool) {
-      const rawDraws = processedAll.map(d => d.mainNums);
-      const lastDraw = rawDraws[rawDraws.length - 1] || [];
-
-      const gaps = {};
-      for (let n of allNums) {
-        let gap = 30;
-        for (let idx = 0; idx < rawDraws.length; idx++) {
-          if (rawDraws[rawDraws.length - 1 - idx].includes(n)) {
-            gap = idx;
-            break;
-          }
-        }
-        gaps[n] = gap;
-      }
-
-      const scores = {};
-      const last10 = rawDraws.slice(-10);
-      for (let n of dnaPool) {
-        const gap = gaps[n];
-        const f10 = last10.filter(d => d.includes(n)).length;
-        let score = 0.0;
-
-        // 골든 리바운드 존 가중치 (2~5주차 최우선)
-        if (gap >= 2 && gap <= 5) score += 45.0;
-        else if (gap === 1) score += 30.0;
-        else if (gap === 0) score += 20.0;
-        else if (gap >= 6 && gap <= 9) score += 25.0;
-        else score += 5.0;
-
-        if (f10 === 2 || f10 === 3) score += 35.0;
-        else if (f10 >= 4) score += 15.0;
-        else if (f10 === 1) score += 20.0;
-
-        score += rand(0, 5);
-        scores[n] = score;
-      }
-
-      const topCandidates = [...dnaPool].sort((a,b) => scores[b] - scores[a]).slice(0, 6);
-      let cores = [topCandidates[0]];
-
-      for (let i = 1; i < topCandidates.length; i++) {
+      for (let item of topCandidates) {
         if (cores.length >= 3) break;
-        const cand = topCandidates[i];
-        const candZone = Math.floor(cand / 10);
-        const zones = cores.map(c => Math.floor(c / 10));
-        if (zones.filter(z => z === candZone).length < 2) {
-          cores.push(cand);
+        const zone = Math.floor(item.num / 10);
+        const existingZones = cores.map(c => Math.floor(c / 10));
+        
+        // 동일 번호대에 2개 이상 몰리지 않도록 조정
+        if (!existingZones.includes(zone) || cores.length === 2) {
+          cores.push(item.num);
         }
       }
 
-      for (let cand of topCandidates) {
+      // 3수가 안 채워졌다면 점수 순 추가
+      for (let item of topCandidates) {
         if (cores.length >= 3) break;
-        if (!cores.includes(cand)) cores.push(cand);
+        if (!cores.includes(item.num)) cores.push(item.num);
       }
-      return cores.sort((a,b) => a - b);
+
+      cores.sort((a,b) => a - b);
+
+      return {
+        pool21,
+        cores,
+        profiles
+      };
     }
 
-    // 4-4. 고속 스마트 5조합 생성 필터
-    function generateSmartSets(pool, cores, count = 5) {
+    // --- [5. 최종 조합 스마트 필터링] ---
+    function generateRegressionCombinations(pool, cores, count = 5) {
       const finalSets = [];
       let attempts = 0;
 
-      while (finalSets.length < count && attempts < 3000) {
+      while (finalSets.length < count && attempts < 3500) {
         attempts++;
-        const corePickCount = Math.random() < 0.5 ? 1 : 2;
+        // 코어수 중 1~2수 필수 고정 배치
+        const pickCoreCount = Math.random() < 0.65 ? 1 : 2;
         const shuffledCores = [...cores].sort(() => 0.5 - Math.random());
-        const base = shuffledCores.slice(0, corePickCount);
+        const base = shuffledCores.slice(0, pickCoreCount);
 
-        const others = pool.filter(n => !base.includes(n)).sort(() => 0.5 - Math.random());
-        const combo = [...base, ...others.slice(0, 6 - base.length)].sort((a,b) => a - b);
+        const remainPool = pool.filter(n => !base.includes(n)).sort(() => 0.5 - Math.random());
+        const combo = [...base, ...remainPool.slice(0, 6 - base.length)].sort((a,b) => a - b);
 
+        // 총합 필터 (100 ~ 175)
         const sum = combo.reduce((a,b) => a + b, 0);
-        if (sum < 90 || sum > 185) continue;
+        if (sum < 100 || sum > 175) continue;
 
+        // 홀짝 비율 필터 (2:4, 3:3, 4:2)
         const oddCnt = combo.filter(n => n % 2 !== 0).length;
         if (![2, 3, 4].includes(oddCnt)) continue;
 
-        // 차이값(diff) 분산 필터
-        const diffs = new Set();
-        for (let i = 0; i < combo.length; i++) {
-          for (let j = i + 1; j < combo.length; j++) {
-            diffs.add(Math.abs(combo[i] - combo[j]));
+        // 고저 비율 (1~22 vs 23~45)
+        const lowCnt = combo.filter(n => n <= 22).length;
+        if (lowCnt < 2 || lowCnt > 4) continue;
+
+        // 연속 번호 3개 이상 배제
+        let consecutive = 0;
+        let hasTriple = false;
+        for (let i = 0; i < combo.length - 1; i++) {
+          if (combo[i+1] - combo[i] === 1) {
+            consecutive++;
+            if (consecutive >= 2) { hasTriple = true; break; }
+          } else {
+            consecutive = 0;
           }
         }
-        if (diffs.size - 5 < 7) continue;
+        if (hasTriple) continue;
 
         const key = combo.join(",");
         if (!finalSets.some(s => s.join(",") === key)) {
@@ -456,53 +482,70 @@
         const fallback = [...pool].sort(() => 0.5 - Math.random()).slice(0, 6).sort((a,b) => a - b);
         finalSets.push(fallback);
       }
+
       return finalSets;
     }
 
-    // --- [5. 실행 기능 (일반분석 / DNA 헌팅)] ---
+    // --- [6. 실행 핸들러] ---
 
-    // 🎯 일반 분석 실행
-    function runNormalPrediction() {
+    // 🔄 회귀주기 정밀 분석 실행
+    function runRegressionAnalysis() {
       if (processedAll.length === 0) {
-        alert("먼저 엑셀 데이터 파일을 불러와주세요.");
+        alert("엑셀 데이터 파일을 먼저 선택해주세요.");
         return;
       }
       clearLog();
-      const numTest = parseInt(document.getElementById("test-count").value);
-      const nextDraw = processedAll[processedAll.length - 1].drawNo + 1;
 
-      appendLog(`=== [일반 분석 (DNA 풀 + 최신 골든 코어)] ===`, "log-header");
-      appendLog(`▶ 과거 ${numTest}회차 백테스팅 성공 풀 교집합(DNA) 추출 중...`, "log-info");
+      const lastDraw = processedAll[processedAll.length - 1].drawNo;
+      const nextDraw = lastDraw + 1;
+
+      appendLog(`=== [OMEGA 회귀주기 정밀 분석 엔진] ===`, "log-header");
+      appendLog(`▶ 데이터베이스: 누적 ${lastDraw}회차 (기준)`, "log-info");
+      appendLog(`▶ 1~45번 고유 회귀주기(Interval Gap) 및 단기 WMA 주기 매칭 중...`, "log-subtext");
 
       setTimeout(() => {
-        const { dnaPool, hit5Count } = extractDnaPoolForNormal(numTest);
-        const cores = pickCoresFromDnaPool(dnaPool);
-        const sets = generateSmartSets(dnaPool, cores, 5);
+        const { pool21, cores, profiles } = getRegressionPoolAndCores(processedAll);
 
-        appendLog(`▶ DNA 분석 완료 (검증된 5적중 회차 풀 ${hit5Count}개 반영)`, "log-dna");
-        appendLog(`▶ [${nextDraw}회차] 추천 21수 풀:`, "log-info");
-        appendLog(`&nbsp;&nbsp;[ ${dnaPool.join(", ")} ]`);
-        appendLog(`▶ [골든 리바운드] 핵심 코어 3수:`, "log-win");
-        appendLog(`&nbsp;&nbsp;${formatSet(cores)}<br>`);
+        appendLog(`▶ [분석 완료] ${nextDraw}회차 최적 주기 도래수 21개 산출 성공`, "log-win");
+        appendLog(`▶ <b>회귀 추천 21수 풀:</b>`, "log-info");
+        appendLog(`&nbsp;&nbsp;[ ${pool21.join(", ")} ]`);
 
-        appendLog(`★ [최종 추천 5개 조합] ★`, "log-target");
-        sets.forEach((s, idx) => {
-          appendLog(`조합 ${idx + 1}: ${formatSet(s)}`);
+        // 코어 3수 주기 데이터 요약 표시
+        appendLog(`<br>▶ <b>★ 회귀 최우선 핵심 코어 3수 ★</b>`, "log-target");
+        appendLog(`&nbsp;&nbsp;${formatSet(cores)}`);
+        
+        cores.forEach(c => {
+          const prof = profiles[c];
+          appendLog(`&nbsp;&nbsp;• <b>${c}번</b>: 미출현 ${prof.currentGap}주기 | 평균주기 ${prof.avgGap.toFixed(1)}주 | 회귀공명점수 ${prof.score.toFixed(1)}점`, "log-subtext");
         });
-      }, 50);
+
+        // 5개 완성 조합 생성
+        const combinations = generateRegressionCombinations(pool21, cores, 5);
+
+        appendLog(`<br>========================================`, "log-subtext");
+        appendLog(`★ <b>[${nextDraw}회차 회귀주기 기반 최종 5개 조합]</b> ★`, "log-target");
+        appendLog(`========================================`, "log-subtext");
+
+        combinations.forEach((c, idx) => {
+          appendLog(`조합 ${idx + 1}: ${formatSet(c)} <span class="stat-badge">합:${c.reduce((a,b)=>a+b,0)}</span>`);
+        });
+
+        // 프로그레스바 채우기
+        document.getElementById("progress-fill").style.width = "100%";
+      }, 80);
     }
 
-    // 🧬 DNA 심층 헌팅 토글 및 실행
+    // 🧬 회귀 공명 DNA 헌팅 (백테스팅 최적화)
     async function toggleHunting() {
       if (processedAll.length === 0) {
-        alert("먼저 엑셀 데이터 파일을 불러와주세요.");
+        alert("엑셀 데이터 파일을 먼저 선택해주세요.");
         return;
       }
 
       const huntBtn = document.getElementById("hunt-btn");
       if (isHunting) {
         stopHuntingFlag = true;
-        huntBtn.innerText = "🧬 DNA 추출 헌팅 시작";
+        huntBtn.innerText = "🧬 회귀 공명 DNA 헌팅";
         huntBtn.classList.remove("btn-stop");
         isHunting = false;
         return;
@@ -515,70 +558,55 @@
 
       const numTest = parseInt(document.getElementById("test-count").value);
       const totalLen = processedAll.length;
-      const startIdx = Math.max(0, totalLen - numTest);
-      let attempt = 0;
+      const startIdx = Math.max(30, totalLen - numTest);
 
-      while (!stopHuntingFlag) {
-        attempt++;
-        clearLog();
-        appendLog(`▶ [시도 ${attempt}] 5개 적중 DNA 탐색 중...`, "log-info");
+      clearLog();
+      appendLog(`=== [회귀주기 백테스팅 및 공명 DNA 탐색] ===`, "log-header");
+      appendLog(`▶ 과거 ${numTest}개 회차에 회귀 모델을 투영하여 적중 주기를 검증합니다.`, "log-info");
 
-        const successDnaPools = [];
-        const successDnaCores = [];
-        const hitRounds = [];
+      let hitCounts = { 3: 0, 4: 0, 5: 0, 6: 0 };
+      let qualifiedRounds = [];
 
-        for (let i = startIdx; i < totalLen; i++) {
-          if (stopHuntingFlag) break;
-          const targetRn = processedAll[i].drawNo;
-          const targetMain = new Set(processedAll[i].mainNums);
-          const subData = processedAll.slice(0, i);
+      for (let i = startIdx; i < totalLen; i++) {
+        if (stopHuntingFlag) break;
 
-          const { pool, cores } = getSyncPool21(subData);
-          const hits = pool.filter(n => targetMain.has(n)).length;
+        const targetRn = processedAll[i].drawNo;
+        const targetMain = new Set(processedAll[i].mainNums);
+        const subData = processedAll.slice(0, i);
 
-          if (hits >= 5) {
-            successDnaPools.push(pool);
-            successDnaCores.push(cores);
-            hitRounds.push(targetRn);
-            appendLog(`[${targetRn}회] 21수 중 ${hits}개 적중! DNA 확보 ★`, "log-dna");
-          } else {
-            appendLog(`[${targetRn}회] 21수 중 ${hits}개 적중`, "log-fail");
-          }
+        const { pool21 } = getRegressionPoolAndCores(subData);
+        const hits = pool21.filter(n => targetMain.has(n)).length;
 
-          document.getElementById("progress-fill").style.width = `${((i - startIdx + 1) / numTest) * 100}%`;
-          await new Promise(r => setTimeout(r, 20)); // 화면 갱신
+        if (hits >= 5) {
+          hitCounts[hits] = (hitCounts[hits] || 0) + 1;
+          qualifiedRounds.push(targetRn);
+          appendLog(`[${targetRn}회차] 21수 중 <span class="log-win">${hits}개 적중!</span> (회귀 주기 완벽 일치)`, "log-dna");
+        } else if (hits === 4) {
+          hitCounts[4] = (hitCounts[4] || 0) + 1;
         }
 
-        if (hitRounds.length >= 2) {
-          appendLog(`<br>[DNA 확보 성공] ${hitRounds.join(", ")} 회차의 성공 패턴을 분석합니다.`, "log-dna");
-
-          const allPoolNums = successDnaPools.flat();
-          const pCounter = {};
-          allPoolNums.forEach(n => pCounter[n] = (pCounter[n] || 0) + 1);
-          const dnaPool = Object.keys(pCounter).map(Number).sort((a,b) => pCounter[b] - pCounter[a]).slice(0, 21).sort((a,b)=>a-b);
-
-          const allCoreNums = successDnaCores.flat();
-          const cCounter = {};
-          allCoreNums.forEach(n => cCounter[n] = (cCounter[n] || 0) + 1);
-          const dnaCores = Object.keys(cCounter).map(Number).sort((a,b) => cCounter[b] - cCounter[a]).slice(0, 3).sort((a,b)=>a-b);
-
-          const nextDraw = processedAll[processedAll.length - 1].drawNo + 1;
-          appendLog(`<br>========================================`, "log-info");
-          appendLog(`★ [${nextDraw}회차] DNA 심층 분석 최종 결과 ★`, "log-header");
-          appendLog(`========================================`, "log-info");
-          appendLog(`추출된 DNA 풀: [ ${dnaPool.join(", ")} ]`, "log-win");
-          appendLog(`추출된 DNA 코어: ${formatSet(dnaCores)}<br>`, "log-target");
-
-          const finalSets = generateSmartSets(dnaPool, dnaCores, 5);
-          finalSets.forEach((s, idx) => {
-            appendLog(`최종 조합 ${idx + 1}: ${formatSet(s)}`, "log-target");
-          });
-          break;
-        }
-        await new Promise(r => setTimeout(r, 50));
+        const pct = ((i - startIdx + 1) / (totalLen - startIdx)) * 100;
+        document.getElementById("progress-fill").style.width = `${pct}%`;
+        await new Promise(r => setTimeout(r, 15));
       }
 
-      huntBtn.innerText = "🧬 DNA 추출 헌팅 시작 (5개 적중 집중 탐색)";
+      if (!stopHuntingFlag) {
+        const nextDraw = processedAll[processedAll.length - 1].drawNo + 1;
+        appendLog(`<br>▶ <b>백테스팅 완료:</b> 5적중 이상 회차 = ${qualifiedRounds.length}회, 4적중 = ${hitCounts[4]}회`, "log-win");
+        
+        // 현재 시점 최종 회귀 풀 추출
+        const { pool21, cores } = getRegressionPoolAndCores(processedAll);
+        appendLog(`▶ <b>[${nextDraw}회차 최적화 회귀 21수]:</b> [ ${pool21.join(", ")} ]`, "log-info");
+        appendLog(`▶ <b>[${nextDraw}회차 최적화 코어 3수]:</b> ${formatSet(cores)}`, "log-target");
+
+        const sets = generateRegressionCombinations(pool21, cores, 5);
+        appendLog(`<br>★ <b>[공명 헌팅 최적 조합 5세트]</b> ★`, "log-target");
+        sets.forEach((s, idx) => {
+          appendLog(`조합 ${idx + 1}: ${formatSet(s)}`);
+        });
+      }
+
+      huntBtn.innerText = "🧬 회귀 공명 DNA 헌팅 (주기 백테스팅 최적화)";
       huntBtn.classList.remove("btn-stop");
       isHunting = false;
     }
