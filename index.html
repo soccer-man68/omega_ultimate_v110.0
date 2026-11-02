@@ -70,6 +70,25 @@
     #excel-input { display: none; }
     .status-text { font-size: 13px; color: var(--text-muted); flex: 1; text-align: right; }
 
+    /* --- [탭 네비게이션] --- */
+    .tab-nav {
+      display: flex; gap: 6px; margin-bottom: 12px;
+    }
+    .tab-btn {
+      flex: 1; padding: 12px 6px; background: #0f172a; border: 1px solid var(--border-color);
+      color: var(--text-muted); font-size: 13px; font-weight: bold; border-radius: 10px;
+      cursor: pointer; transition: 0.2s; text-align: center;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #1e1b4b, #312e81);
+      border-color: var(--accent-cyan);
+      color: var(--accent-gold);
+    }
+
+    /* 탭 콘텐츠 */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
     /* 버튼 스타일 */
     .btn-action {
       width: 100%; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;
@@ -78,9 +97,27 @@
     }
     .btn-action:active { transform: scale(0.98); }
     .btn-main { background: linear-gradient(135deg, #d97706, #b45309); color: #fff; padding: 15px; font-size: 15px; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35); }
+    .btn-custom { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; padding: 15px; font-size: 15px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); }
     .btn-verify { background: #0f766e; color: #fff; padding: 11px; font-size: 13px; }
     .btn-hunt { background: #6d28d9; color: #fff; padding: 13px; font-size: 14px; }
     .btn-stop { background: #475569 !important; }
+
+    /* 사용자 입력창 */
+    .input-box-label { font-size: 13px; font-weight: bold; color: var(--accent-cyan); margin-bottom: 6px; display: block; }
+    .custom-textarea {
+      width: 100%; height: 75px; background: #000; border: 1px solid var(--border-color);
+      border-radius: 8px; padding: 10px; color: #fff; font-size: 14px; outline: none;
+      resize: vertical; font-family: inherit; line-height: 1.4;
+    }
+    .custom-textarea:focus { border-color: var(--accent-cyan); }
+    .custom-ctrl-row {
+      display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 8px;
+    }
+    .custom-ctrl-row label { font-size: 13px; color: var(--text-main); font-weight: bold; }
+    select.custom-select {
+      background: #000; color: #fff; border: 1px solid var(--border-color);
+      padding: 6px 12px; border-radius: 6px; outline: none; font-size: 13px;
+    }
 
     .terminal {
       background: #000; border: 1px solid var(--border-color); border-radius: 12px;
@@ -110,6 +147,7 @@
       display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 4px;
     }
     .tag-gold { background: #78350f; color: #fde68a; }
+    .tag-blue { background: #1e3a8a; color: #bfdbfe; }
   </style>
 </head>
 <body>
@@ -133,6 +171,7 @@
     </header>
 
     <div class="main-wrap">
+      <!-- 엑셀 데이터 로드 카드 -->
       <div class="card">
         <div class="ctrl-row">
           <label class="file-btn" for="excel-input">📁 엑셀 파일(.xlsx) 등록</label>
@@ -141,23 +180,58 @@
         </div>
       </div>
 
-      <!-- 정밀 회귀 분석 실행 버튼 -->
-      <button class="btn-action btn-main" onclick="runTrueRegressionAnalysis()">
-        🎯 최강 유효 회귀선 정밀 분석 (21수 + 코어 3수)
-      </button>
+      <!-- 상단 탭 네비게이션 -->
+      <div class="tab-nav">
+        <div id="tab-btn-auto" class="tab-btn active" onclick="switchTab('auto')">
+          🔄 자동 회귀 엔진 (21수+코어)
+        </div>
+        <div id="tab-btn-custom" class="tab-btn" onclick="switchTab('custom')">
+          🎯 맞춤 번호 회귀 조합
+        </div>
+      </div>
 
-      <div style="display: flex; gap: 8px;">
-        <button class="btn-action btn-verify" onclick="verifyPreviousRound()">
-          🔍 직전회차 적중력 검증
+      <!-- [탭 1: 기존 자동 회귀 분석 엔진] -->
+      <div id="tab-content-auto" class="tab-content active">
+        <button class="btn-action btn-main" onclick="runTrueRegressionAnalysis()">
+          🎯 최강 유효 회귀선 정밀 분석 (21수 + 코어 3수)
         </button>
-        <button id="hunt-btn" class="btn-action btn-hunt" onclick="toggleDeepBacktest()">
-          📊 최근 20회차 정밀 전수검사
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-action btn-verify" onclick="verifyPreviousRound()">
+            🔍 직전회차 적중력 검증
+          </button>
+          <button id="hunt-btn" class="btn-action btn-hunt" onclick="toggleDeepBacktest()">
+            📊 최근 20회차 정밀 전수검사
+          </button>
+        </div>
+      </div>
+
+      <!-- [탭 2: 신규 사용자 번호 회귀 조합기] -->
+      <div id="tab-content-custom" class="tab-content">
+        <div class="card">
+          <span class="input-box-label">📝 분석할 번호들을 입력하세요 (최소 6개 이상)</span>
+          <textarea id="custom-nums-input" class="custom-textarea" placeholder="예: 2, 8, 20, 22, 24, 27, 33, 34, 39 (쉼표 또는 공백 구분)"></textarea>
+          
+          <div class="custom-ctrl-row">
+            <label for="custom-sets-count">생성할 조합 세트수:</label>
+            <select id="custom-sets-count" class="custom-select">
+              <option value="3">3세트</option>
+              <option value="5" selected>5세트</option>
+              <option value="7">7세트</option>
+              <option value="10">10세트</option>
+              <option value="15">15세트</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn-action btn-custom" onclick="runCustomRegressionCombination()">
+          🧬 입력 번호 회귀주기 분석 및 최적 조합 생성
         </button>
       </div>
 
-      <!-- 결과 출력 터미널 -->
-      <div id="terminal" class="terminal">
-        <div class="log-info">엑셀 파일을 등록한 후 [최강 유효 회귀선 정밀 분석]을 실행하십시오.</div>
+      <!-- 결과 출력 터미널 (공용) -->
+      <div id="terminal" class="terminal" style="margin-top: 10px;">
+        <div class="log-info">엑셀 파일을 등록한 후 원하는 분석 탭의 버튼을 실행하십시오.</div>
       </div>
     </div>
   </div>
@@ -178,7 +252,15 @@
       if (e.key === "Enter") checkPin();
     });
 
-    // --- [2. 엑셀 로더] ---
+    // --- [2. 탭 전환 기능] ---
+    function switchTab(tabName) {
+      document.getElementById("tab-btn-auto").classList.toggle("active", tabName === "auto");
+      document.getElementById("tab-btn-custom").classList.toggle("active", tabName === "custom");
+      document.getElementById("tab-content-auto").classList.toggle("active", tabName === "auto");
+      document.getElementById("tab-content-custom").classList.toggle("active", tabName === "custom");
+    }
+
+    // --- [3. 엑셀 로더] ---
     let processedAll = [];
 
     document.getElementById("excel-input").addEventListener("change", function(e) {
@@ -212,7 +294,7 @@
             statusLbl.style.color = "#fbbf24";
             clearLog();
             appendLog(`▶ 데이터 파일 로드 성공! 최근 회차: ${lastRound}회차`, "log-win");
-            appendLog(`▶ '유효 회귀선 추적 엔진'이 준비되었습니다. 상단 버튼을 누르세요.`, "log-info");
+            appendLog(`▶ 기본 21수 자동 분석 또는 맞춤 번호 회귀 조합을 실행할 수 있습니다.`, "log-info");
           }
         } catch (err) {
           alert("파일 읽기 오류: " + err.message);
@@ -221,7 +303,7 @@
       reader.readAsArrayBuffer(file);
     });
 
-    // --- [3. UI 시각화] ---
+    // --- [4. UI 시각화 유틸] ---
     const allNums = Array.from({length: 45}, (_, i) => i + 1);
 
     function appendLog(html, className = "") {
@@ -250,12 +332,12 @@
       return nums.map(n => getBallHtml(n)).join(" ");
     }
 
-    // --- [4. 정통 유효 회귀선 분석 엔진 (Active Regression Engine)] ---
+    // --- [5. 정통 유효 회귀선 분석 엔진] ---
 
-    // 4-1. 실시간 가장 당첨번호를 잘 뿜어내는 'TOP 유효 회귀선' 발굴
+    // 5-1. 실시간 TOP 유효 회귀선 발굴
     function findActiveRegressionLines(dataset, checkDepth = 15, maxLine = 45) {
       const totalLen = dataset.length;
-      if (totalLen < checkDepth + maxLine) return [1, 2, 3, 5, 7, 10]; // 폴백
+      if (totalLen < checkDepth + maxLine) return { topLines: [1, 2, 3, 5, 7, 10], lineScores: [] };
 
       const lineScores = [];
 
@@ -276,24 +358,21 @@
           if (matchCount >= 1) activeWeeks++;
         }
 
-        // 연속성(Consistency)과 총 적중수에 가중치
         const score = (activeWeeks * 2.0) + hitsTotal;
         lineScores.push({ line, score, activeWeeks, hitsTotal });
       }
 
       lineScores.sort((a,b) => b.score - a.score);
-      // 가장 활성화된 TOP 6개 회귀선 반환 (단, 1회귀(이월)는 필수 관찰군 포함)
       const topLines = lineScores.slice(0, 7).map(x => x.line);
       if (!topLines.includes(1)) topLines.unshift(1);
       return { topLines: [...new Set(topLines)].slice(0, 6), lineScores };
     }
 
-    // 4-2. 황금 3대 구역 쿼터제(Quota) 기반 21수 및 코어 추출
+    // 5-2. 21수 풀 및 코어 추출
     function extractTrueRegressionPool(dataset) {
       const totalLen = dataset.length;
       const { topLines } = findActiveRegressionLines(dataset, 15, 45);
 
-      // 번호별 마지막 출현 이후 미출현 회차(Gap) 계산
       const gaps = {};
       for (let n of allNums) {
         let gap = 999;
@@ -306,7 +385,6 @@
         gaps[n] = gap;
       }
 
-      // 유효 회귀선들과의 공명 점수(Resonance) 산정
       const regressionScore = {};
       allNums.forEach(n => regressionScore[n] = 0);
 
@@ -314,17 +392,13 @@
         const sourceIdx = totalLen - line;
         if (sourceIdx >= 0) {
           const sourceNums = dataset[sourceIdx].mainNums;
-          const weight = (6 - rank) * 8; // 상위 회귀선일수록 고득점
+          const weight = (6 - rank) * 8;
           sourceNums.forEach(n => {
             regressionScore[n] += weight;
           });
         }
       });
 
-      // 3개 구역 분할
-      // Zone A: 초단기/이월 (Gap 0 ~ 4) - 실제 당첨의 40~50% 집중
-      // Zone B: 중기 회귀 골든존 (Gap 5 ~ 14) - 실제 당첨의 35~40% 집중
-      // Zone C: 장기 콜드존 (Gap 15 이상) - 실제 당첨의 10~15% 집중
       const zoneA = allNums.filter(n => gaps[n] <= 4).sort((a,b) => {
         return (regressionScore[b] * 1.5 + (10 - gaps[b])) - (regressionScore[a] * 1.5 + (10 - gaps[a]));
       });
@@ -337,24 +411,18 @@
         return regressionScore[b] - regressionScore[a];
       });
 
-      // [황금 쿼터 배분]: Zone A에서 7수, Zone B에서 9수, Zone C에서 5수 = 총 21수
       let pool = [
         ...zoneA.slice(0, 7),
         ...zoneB.slice(0, 9),
         ...zoneC.slice(0, 5)
       ];
 
-      // 혹시 부족할 경우 보충
       let remaining = allNums.filter(n => !pool.includes(n)).sort((a,b) => regressionScore[b] - regressionScore[a]);
       while (pool.length < 21) {
         pool.push(remaining.shift());
       }
       pool = pool.slice(0, 21).sort((a,b) => a - b);
 
-      // [핵심 코어 3수 선출: 리스크 분산형]
-      // Core 1: Zone A(이월/핫존) 최고 유력수 1수
-      // Core 2: Zone B(중기 회귀존) 최고 유력수 1수
-      // Core 3: 전체 회귀선 중복점수가 가장 높은 1수 (Zone 겹침 무관)
       const core1 = zoneA[0] || pool[0];
       const core2 = zoneB[0] || pool[1];
       const candidatesForCore3 = pool.filter(n => n !== core1 && n !== core2);
@@ -372,14 +440,13 @@
       };
     }
 
-    // 4-3. 5개 조합 최적 분산 빌더
+    // 5-3. 5개 조합 최적 분산 빌더
     function buildRegressionSets(pool21, cores, count = 5) {
       const results = [];
       let tries = 0;
 
       while (results.length < count && tries < 4000) {
         tries++;
-        // 코어 몰빵 위험 차단: 각 조합마다 코어는 1~2개만 분산 포함
         const corePickCnt = (tries % 2 === 0) ? 1 : 2;
         const shuffledCores = [...cores].sort(() => 0.5 - Math.random());
         const selectedCores = shuffledCores.slice(0, corePickCnt);
@@ -387,15 +454,12 @@
         const restPool = pool21.filter(n => !selectedCores.includes(n)).sort(() => 0.5 - Math.random());
         const combo = [...selectedCores, ...restPool.slice(0, 6 - selectedCores.length)].sort((a,b) => a - b);
 
-        // 총합 필터 (110 ~ 175)
         const sum = combo.reduce((a,b) => a + b, 0);
         if (sum < 105 || sum > 175) continue;
 
-        // 홀짝 비율 필터 (2:4, 3:3, 4:2)
         const oddCnt = combo.filter(n => n % 2 !== 0).length;
         if (![2, 3, 4].includes(oddCnt)) continue;
 
-        // 번호대 편중 방지 (한 번호대에서 4개 이상 불가)
         const zoneCounts = [0, 0, 0, 0, 0];
         combo.forEach(n => zoneCounts[Math.min(4, Math.floor((n-1)/10))]++);
         if (Math.max(...zoneCounts) >= 4) continue;
@@ -412,9 +476,9 @@
       return results;
     }
 
-    // --- [5. 기능 실행부] ---
+    // --- [6. 기존 탭 기능 실행부 (100% 유지)] ---
 
-    // 🎯 메인 실행: 최강 유효 회귀선 정밀 분석
+    // 메인 실행: 최강 유효 회귀선 정밀 분석
     function runTrueRegressionAnalysis() {
       if (processedAll.length === 0) {
         alert("엑셀 데이터 파일을 먼저 등록해주세요.");
@@ -456,7 +520,7 @@
       }, 50);
     }
 
-    // 🔍 직전회차 적중력 자가진단 검증
+    // 직전회차 적중력 자가진단 검증
     function verifyPreviousRound() {
       if (processedAll.length < 30) {
         alert("최소 30회차 이상의 데이터가 필요합니다.");
@@ -466,7 +530,7 @@
 
       const lastIdx = processedAll.length - 1;
       const targetDraw = processedAll[lastIdx];
-      const subDataset = processedAll.slice(0, lastIdx); // 직전회차 직전까지만 주고 예측
+      const subDataset = processedAll.slice(0, lastIdx);
 
       appendLog(`=== [직전 ${targetDraw.drawNo}회차 적중력 사후 검증] ===`, "log-title");
       appendLog(`▶ ${targetDraw.drawNo}회차 실제 당첨번호: ${formatSet(targetDraw.mainNums)} + 보너스 ${getBallHtml(targetDraw.bonusNum)}`, "log-info");
@@ -488,7 +552,7 @@
       appendLog(`▶ 핵심 코어 3수(${cores.join(", ")}) 중 적중: <b>${matchedCores.length}개</b>`, "log-info");
     }
 
-    // 📊 최근 20회차 정밀 전수검사
+    // 최근 20회차 정밀 전수검사
     async function toggleDeepBacktest() {
       if (processedAll.length < 50) {
         alert("데이터가 부족합니다 (최소 50회차 이상 필요).");
@@ -522,6 +586,142 @@
       appendLog(`★ <b>20회차 평균 포획수: ${avgHit}개 / 6개</b>`, "log-title");
       appendLog(`• 5~6개 적중: <b>${hitCounts[6] + hitCounts[5]}회</b> | 4개 적중: <b>${hitCounts[4]}회</b> | 3개 이하: <b>${hitCounts[3] + hitCounts[2] + hitCounts[1] + hitCounts[0]}회</b>`, "log-info");
       appendLog(`✔ 21수 풀 안에 평균 4개 이상의 당첨수가 안정적으로 갇히고 있음을 증명합니다.`, "log-win");
+    }
+
+    // --- [7. 신규 추가: 맞춤 번호 회귀 조합 생성기] ---
+    function runCustomRegressionCombination() {
+      if (processedAll.length === 0) {
+        alert("먼저 엑셀 데이터 파일을 등록해주세요.");
+        return;
+      }
+
+      const inputVal = document.getElementById("custom-nums-input").value;
+      // 쉼표, 공백, 줄바꿈 등 모든 구분자 파싱
+      const rawNums = inputVal.match(/\d+/g);
+
+      if (!rawNums) {
+        alert("조합할 번호들을 입력해주세요.\n예: 2, 8, 20, 22, 24, 27, 33, 34, 39");
+        return;
+      }
+
+      // 1~45 범위 내의 중복 없는 고유 번호 추출
+      const parsedNums = [...new Set(rawNums.map(Number))]
+        .filter(n => n >= 1 && n <= 45)
+        .sort((a,b) => a - b);
+
+      if (parsedNums.length < 6) {
+        alert(`6개 이상의 번호를 입력해야 조합을 생성할 수 있습니다.\n(현재 유효 번호: ${parsedNums.length}개)`);
+        return;
+      }
+
+      const desiredSets = parseInt(document.getElementById("custom-sets-count").value) || 5;
+      clearLog();
+
+      const lastRound = processedAll[processedAll.length - 1].drawNo;
+      const nextRound = lastRound + 1;
+
+      appendLog(`=== [사용자 맞춤 회귀 분석 및 최적 조합기] ===`, "log-title");
+      appendLog(`▶ 데이터 기준: 최근 ${lastRound}회차 | 목표: <b>${nextRound}회차</b>`, "log-info");
+      appendLog(`▶ 입력된 번호군 (${parsedNums.length}개): [ ${parsedNums.join(", ")} ]`, "log-sub");
+
+      // 1. 유효 회귀선 및 미출현 Gap 분석
+      const { topLines } = findActiveRegressionLines(processedAll, 15, 45);
+      const totalLen = processedAll.length;
+
+      const gaps = {};
+      parsedNums.forEach(n => {
+        let gap = 999;
+        for (let idx = 0; idx < totalLen; idx++) {
+          if (processedAll[totalLen - 1 - idx].mainNums.includes(n)) {
+            gap = idx;
+            break;
+          }
+        }
+        gaps[n] = gap;
+      });
+
+      // 2. 입력된 번호들의 회귀 점수 계산
+      const numScores = {};
+      parsedNums.forEach(n => numScores[n] = 0);
+
+      topLines.forEach((line, rank) => {
+        const sourceIdx = totalLen - line;
+        if (sourceIdx >= 0) {
+          const sourceNums = processedAll[sourceIdx].mainNums;
+          const weight = (6 - rank) * 10;
+          sourceNums.forEach(n => {
+            if (numScores[n] !== undefined) numScores[n] += weight;
+          });
+        }
+      });
+
+      // 주기 적시성 보너스 (골든 리바운드 & 이월)
+      parsedNums.forEach(n => {
+        const g = gaps[n];
+        if (g <= 4) numScores[n] += 25;       // 핫존/이월
+        else if (g >= 5 && g <= 12) numScores[n] += 35; // 골든 주기
+        else numScores[n] += 10;
+      });
+
+      // 점수 순 내림차순 정렬
+      const rankedNums = [...parsedNums].sort((a,b) => numScores[b] - numScores[a]);
+
+      // 사용자 번호 중 최우선 회귀 코어 2수 선정
+      const customCore = rankedNums.slice(0, 2);
+
+      appendLog(`▶ 활성화된 회귀선: <span class="log-line">${topLines.map(l => l + "회귀").join(", ")}</span>`, "log-sub");
+      appendLog(`▶ 입력 번호 중 <b>회귀 최우력 핵심 번호:</b> ${formatSet(customCore)}`, "log-win");
+
+      // 3. 사용자 번호 풀 내에서 최적 6수 조합 생성 (지정된 세트 수만큼)
+      const finalCombos = [];
+      let attempts = 0;
+
+      while (finalCombos.length < desiredSets && attempts < 5000) {
+        attempts++;
+
+        // 코어 1~2수를 기반으로 나머지 번호 무작위 선택
+        const corePickCount = (attempts % 2 === 0) ? 1 : Math.min(2, customCore.length);
+        const shuffledCore = [...customCore].sort(() => 0.5 - Math.random());
+        const base = shuffledCore.slice(0, corePickCount);
+
+        const restCandidates = parsedNums.filter(n => !base.includes(n)).sort(() => 0.5 - Math.random());
+        const candidateCombo = [...base, ...restCandidates.slice(0, 6 - base.length)].sort((a,b) => a - b);
+
+        // 총합 필터 (번호 개수가 적어서 필터가 너무 빡빡하지 않도록 유연하게 적용)
+        const sum = candidateCombo.reduce((a,b) => a + b, 0);
+        if (attempts < 2000 && (sum < 95 || sum > 185)) continue;
+
+        // 홀짝 비율 (최소 1:5 ~ 5:1 사이)
+        const oddCnt = candidateCombo.filter(n => n % 2 !== 0).length;
+        if (attempts < 2000 && (oddCnt === 0 || oddCnt === 6)) continue;
+
+        const key = candidateCombo.join(",");
+        if (!finalCombos.some(s => s.join(",") === key)) {
+          finalCombos.push(candidateCombo);
+        }
+      }
+
+      // 조합 수가 부족한 경우 단순 셔플로 채움
+      while (finalCombos.length < desiredSets) {
+        const fallback = [...parsedNums].sort(() => 0.5 - Math.random()).slice(0, 6).sort((a,b) => a - b);
+        const key = fallback.join(",");
+        if (!finalCombos.some(s => s.join(",") === key)) {
+          finalCombos.push(fallback);
+        } else {
+          finalCombos.push(fallback); // 최후 폴백
+          break;
+        }
+      }
+
+      appendLog(`<br>========================================`, "log-sub");
+      appendLog(`★ <b>[맞춤 회귀 최적화 ${desiredSets}개 조합 결과]</b> ★`, "log-title");
+      appendLog(`========================================`, "log-sub");
+
+      finalCombos.forEach((c, idx) => {
+        const sumVal = c.reduce((a,b) => a + b, 0);
+        const odd = c.filter(n => n % 2 !== 0).length;
+        appendLog(`조합 ${idx + 1}: ${formatSet(c)} <span class="tag tag-gold">합:${sumVal}</span> <span class="tag tag-blue">홀${odd}:짝${6-odd}</span>`);
+      });
     }
   </script>
 </body>
