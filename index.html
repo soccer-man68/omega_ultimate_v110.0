@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>OMEGA REGRESSION PRO v111.0</title>
+  <title>OMEGA REGRESSION PRO v112.0</title>
   <!-- 엑셀(.xlsx) 파일 파싱 라이브러리 CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
@@ -70,13 +70,13 @@
     #excel-input { display: none; }
     .status-text { font-size: 13px; color: var(--text-muted); flex: 1; text-align: right; }
 
-    /* --- [탭 네비게이션] --- */
+    /* --- [탭 네비게이션: 3개 탭 구성] --- */
     .tab-nav {
-      display: flex; gap: 6px; margin-bottom: 12px;
+      display: flex; gap: 5px; margin-bottom: 12px;
     }
     .tab-btn {
-      flex: 1; padding: 12px 6px; background: #0f172a; border: 1px solid var(--border-color);
-      color: var(--text-muted); font-size: 13px; font-weight: bold; border-radius: 10px;
+      flex: 1; padding: 10px 4px; background: #0f172a; border: 1px solid var(--border-color);
+      color: var(--text-muted); font-size: 12px; font-weight: bold; border-radius: 10px;
       cursor: pointer; transition: 0.2s; text-align: center;
     }
     .tab-btn.active {
@@ -98,18 +98,20 @@
     .btn-action:active { transform: scale(0.98); }
     .btn-main { background: linear-gradient(135deg, #d97706, #b45309); color: #fff; padding: 15px; font-size: 15px; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35); }
     .btn-custom { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; padding: 15px; font-size: 15px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); }
+    .btn-segmented { background: linear-gradient(135deg, #059669, #047857); color: #fff; padding: 15px; font-size: 15px; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35); }
     .btn-verify { background: #0f766e; color: #fff; padding: 11px; font-size: 13px; }
     .btn-hunt { background: #6d28d9; color: #fff; padding: 13px; font-size: 14px; }
     .btn-stop { background: #475569 !important; }
 
-    /* 사용자 입력창 */
+    /* 입력 UI */
     .input-box-label { font-size: 13px; font-weight: bold; color: var(--accent-cyan); margin-bottom: 6px; display: block; }
     .custom-textarea {
       width: 100%; height: 75px; background: #000; border: 1px solid var(--border-color);
       border-radius: 8px; padding: 10px; color: #fff; font-size: 14px; outline: none;
       resize: vertical; font-family: inherit; line-height: 1.4;
     }
-    .custom-textarea:focus { border-color: var(--accent-cyan); }
+    .custom-textarea:focus, .seg-input:focus { border-color: var(--accent-cyan); }
+    
     .custom-ctrl-row {
       display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 8px;
     }
@@ -117,6 +119,14 @@
     select.custom-select {
       background: #000; color: #fff; border: 1px solid var(--border-color);
       padding: 6px 12px; border-radius: 6px; outline: none; font-size: 13px;
+    }
+
+    /* 세분화 탭 입력창 스타일 */
+    .seg-group { margin-bottom: 12px; }
+    .seg-label { font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .seg-input {
+      width: 100%; height: 42px; background: #000; border: 1px solid var(--border-color);
+      border-radius: 8px; padding: 0 12px; color: #fff; font-size: 14px; outline: none;
     }
 
     .terminal {
@@ -148,6 +158,7 @@
     }
     .tag-gold { background: #78350f; color: #fde68a; }
     .tag-blue { background: #1e3a8a; color: #bfdbfe; }
+    .tag-green { background: #064e3b; color: #6ee7b7; }
   </style>
 </head>
 <body>
@@ -156,7 +167,7 @@
   <div id="lock-screen">
     <div class="lock-box">
       <div class="lock-title">OMEGA REGRESSION</div>
-      <div class="lock-sub">정통 유효 회귀선 엔진 v111.0</div>
+      <div class="lock-sub">정통 유효 회귀선 엔진 v112.0</div>
       <input type="password" id="pin-field" class="pin-input" maxlength="4" placeholder="••••" pattern="[0-9]*" inputmode="numeric">
       <button class="pin-btn" onclick="checkPin()">인증 및 접속</button>
       <div id="err-text" class="err-msg">비밀번호가 일치하지 않습니다.</div>
@@ -166,7 +177,7 @@
   <!-- [메인 어플리케이션 화면] -->
   <div id="app-container">
     <header>
-      <h1>OMEGA REGRESSION PRO v111.0</h1>
+      <h1>OMEGA REGRESSION PRO v112.0</h1>
       <p>Active Regression Lines & Zone Quota System</p>
     </header>
 
@@ -180,13 +191,16 @@
         </div>
       </div>
 
-      <!-- 상단 탭 네비게이션 -->
+      <!-- 상단 탭 네비게이션 (3개 탭) -->
       <div class="tab-nav">
         <div id="tab-btn-auto" class="tab-btn active" onclick="switchTab('auto')">
-          🔄 자동 회귀 엔진 (21수+코어)
+          🔄 자동 회귀 (21수)
         </div>
         <div id="tab-btn-custom" class="tab-btn" onclick="switchTab('custom')">
-          🎯 맞춤 번호 회귀 조합
+          🎯 맞춤 조합 (자유)
+        </div>
+        <div id="tab-btn-segmented" class="tab-btn" onclick="switchTab('segmented')">
+          🔀 3단계 세분화
         </div>
       </div>
 
@@ -206,7 +220,7 @@
         </div>
       </div>
 
-      <!-- [탭 2: 신규 사용자 번호 회귀 조합기] -->
+      <!-- [탭 2: 기존 사용자 번호 회귀 조합기] -->
       <div id="tab-content-custom" class="tab-content">
         <div class="card">
           <span class="input-box-label">📝 분석할 번호들을 입력하세요 (최소 6개 이상)</span>
@@ -226,6 +240,66 @@
 
         <button class="btn-action btn-custom" onclick="runCustomRegressionCombination()">
           🧬 입력 번호 회귀주기 분석 및 최적 조합 생성
+        </button>
+      </div>
+
+      <!-- [탭 3: 신규 3단계 세분화 회귀 조합기] -->
+      <div id="tab-content-segmented" class="tab-content">
+        <div class="card">
+          <span class="input-box-label">🔀 3단계 회귀 그룹별 번호 입력</span>
+          
+          <!-- 자동회귀 입력칸 (3수) -->
+          <div class="seg-group">
+            <div class="seg-label">
+              <span>① 자동회귀군 (정확히 3수)</span>
+              <span style="color:var(--accent-gold);">1~2수 추출</span>
+            </div>
+            <input type="text" id="seg-auto-input" class="seg-input" placeholder="예: 3, 14, 25">
+          </div>
+
+          <!-- 선형회귀 입력칸 (3수) -->
+          <div class="seg-group">
+            <div class="seg-label">
+              <span>② 선형회귀군 (정확히 3수)</span>
+              <span style="color:var(--accent-cyan);">1~2수 추출</span>
+            </div>
+            <input type="text" id="seg-linear-input" class="seg-input" placeholder="예: 7, 18, 32">
+          </div>
+
+          <!-- 드래그/자유군 입력칸 (0~6수) -->
+          <div class="seg-group" style="margin-bottom: 4px;">
+            <div class="seg-label">
+              <span>③ 드래그군 (0수 ~ 최대 6수 선택)</span>
+              <span style="color:var(--accent-green);">0~2수 추출</span>
+            </div>
+            <input type="text" id="seg-drag-input" class="seg-input" placeholder="예: 11, 23, 40 (비워둬도 무방)">
+          </div>
+
+          <!-- 추천수 및 세트수 선택 -->
+          <div class="custom-ctrl-row" style="margin-top: 14px;">
+            <div>
+              <label for="seg-pick-count">추천 번호수:&nbsp;</label>
+              <select id="seg-pick-count" class="custom-select">
+                <option value="3">3수 추천</option>
+                <option value="4">4수 추천</option>
+                <option value="5">5수 추천</option>
+                <option value="6" selected>6수 추천</option>
+              </select>
+            </div>
+            <div>
+              <label for="seg-sets-count">세트수:&nbsp;</label>
+              <select id="seg-sets-count" class="custom-select">
+                <option value="3">3세트</option>
+                <option value="5" selected>5세트</option>
+                <option value="7">7세트</option>
+                <option value="10">10세트</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-action btn-segmented" onclick="runSegmentedRegressionCombination()">
+          ✨ 세분화 회귀 최적 조합 생성
         </button>
       </div>
 
@@ -256,8 +330,11 @@
     function switchTab(tabName) {
       document.getElementById("tab-btn-auto").classList.toggle("active", tabName === "auto");
       document.getElementById("tab-btn-custom").classList.toggle("active", tabName === "custom");
+      document.getElementById("tab-btn-segmented").classList.toggle("active", tabName === "segmented");
+      
       document.getElementById("tab-content-auto").classList.toggle("active", tabName === "auto");
       document.getElementById("tab-content-custom").classList.toggle("active", tabName === "custom");
+      document.getElementById("tab-content-segmented").classList.toggle("active", tabName === "segmented");
     }
 
     // --- [3. 엑셀 로더] ---
@@ -294,7 +371,7 @@
             statusLbl.style.color = "#fbbf24";
             clearLog();
             appendLog(`▶ 데이터 파일 로드 성공! 최근 회차: ${lastRound}회차`, "log-win");
-            appendLog(`▶ 기본 21수 자동 분석 또는 맞춤 번호 회귀 조합을 실행할 수 있습니다.`, "log-info");
+            appendLog(`▶ 1~3번 탭 중 원하는 분석 모드를 선택하여 실행하십시오.`, "log-info");
           }
         } catch (err) {
           alert("파일 읽기 오류: " + err.message);
@@ -332,9 +409,15 @@
       return nums.map(n => getBallHtml(n)).join(" ");
     }
 
+    function parseInputNumbers(text) {
+      if (!text) return [];
+      const matches = text.match(/\d+/g);
+      if (!matches) return [];
+      return [...new Set(matches.map(Number))].filter(n => n >= 1 && n <= 45);
+    }
+
     // --- [5. 정통 유효 회귀선 분석 엔진] ---
 
-    // 5-1. 실시간 TOP 유효 회귀선 발굴
     function findActiveRegressionLines(dataset, checkDepth = 15, maxLine = 45) {
       const totalLen = dataset.length;
       if (totalLen < checkDepth + maxLine) return { topLines: [1, 2, 3, 5, 7, 10], lineScores: [] };
@@ -368,7 +451,6 @@
       return { topLines: [...new Set(topLines)].slice(0, 6), lineScores };
     }
 
-    // 5-2. 21수 풀 및 코어 추출
     function extractTrueRegressionPool(dataset) {
       const totalLen = dataset.length;
       const { topLines } = findActiveRegressionLines(dataset, 15, 45);
@@ -440,7 +522,6 @@
       };
     }
 
-    // 5-3. 5개 조합 최적 분산 빌더
     function buildRegressionSets(pool21, cores, count = 5) {
       const results = [];
       let tries = 0;
@@ -476,9 +557,8 @@
       return results;
     }
 
-    // --- [6. 기존 탭 기능 실행부 (100% 유지)] ---
+    // --- [6. 탭 1 기능: 최강 유효 회귀선 정밀 분석] ---
 
-    // 메인 실행: 최강 유효 회귀선 정밀 분석
     function runTrueRegressionAnalysis() {
       if (processedAll.length === 0) {
         alert("엑셀 데이터 파일을 먼저 등록해주세요.");
@@ -520,7 +600,6 @@
       }, 50);
     }
 
-    // 직전회차 적중력 자가진단 검증
     function verifyPreviousRound() {
       if (processedAll.length < 30) {
         alert("최소 30회차 이상의 데이터가 필요합니다.");
@@ -552,7 +631,6 @@
       appendLog(`▶ 핵심 코어 3수(${cores.join(", ")}) 중 적중: <b>${matchedCores.length}개</b>`, "log-info");
     }
 
-    // 최근 20회차 정밀 전수검사
     async function toggleDeepBacktest() {
       if (processedAll.length < 50) {
         alert("데이터가 부족합니다 (최소 50회차 이상 필요).");
@@ -588,7 +666,8 @@
       appendLog(`✔ 21수 풀 안에 평균 4개 이상의 당첨수가 안정적으로 갇히고 있음을 증명합니다.`, "log-win");
     }
 
-    // --- [7. 신규 추가: 맞춤 번호 회귀 조합 생성기] ---
+    // --- [7. 탭 2 기능: 맞춤 번호 회귀 조합 생성기 (자유 입력)] ---
+
     function runCustomRegressionCombination() {
       if (processedAll.length === 0) {
         alert("먼저 엑셀 데이터 파일을 등록해주세요.");
@@ -596,18 +675,7 @@
       }
 
       const inputVal = document.getElementById("custom-nums-input").value;
-      // 쉼표, 공백, 줄바꿈 등 모든 구분자 파싱
-      const rawNums = inputVal.match(/\d+/g);
-
-      if (!rawNums) {
-        alert("조합할 번호들을 입력해주세요.\n예: 2, 8, 20, 22, 24, 27, 33, 34, 39");
-        return;
-      }
-
-      // 1~45 범위 내의 중복 없는 고유 번호 추출
-      const parsedNums = [...new Set(rawNums.map(Number))]
-        .filter(n => n >= 1 && n <= 45)
-        .sort((a,b) => a - b);
+      const parsedNums = parseInputNumbers(inputVal).sort((a,b) => a - b);
 
       if (parsedNums.length < 6) {
         alert(`6개 이상의 번호를 입력해야 조합을 생성할 수 있습니다.\n(현재 유효 번호: ${parsedNums.length}개)`);
@@ -624,7 +692,6 @@
       appendLog(`▶ 데이터 기준: 최근 ${lastRound}회차 | 목표: <b>${nextRound}회차</b>`, "log-info");
       appendLog(`▶ 입력된 번호군 (${parsedNums.length}개): [ ${parsedNums.join(", ")} ]`, "log-sub");
 
-      // 1. 유효 회귀선 및 미출현 Gap 분석
       const { topLines } = findActiveRegressionLines(processedAll, 15, 45);
       const totalLen = processedAll.length;
 
@@ -640,7 +707,6 @@
         gaps[n] = gap;
       });
 
-      // 2. 입력된 번호들의 회귀 점수 계산
       const numScores = {};
       parsedNums.forEach(n => numScores[n] = 0);
 
@@ -655,31 +721,24 @@
         }
       });
 
-      // 주기 적시성 보너스 (골든 리바운드 & 이월)
       parsedNums.forEach(n => {
         const g = gaps[n];
-        if (g <= 4) numScores[n] += 25;       // 핫존/이월
-        else if (g >= 5 && g <= 12) numScores[n] += 35; // 골든 주기
+        if (g <= 4) numScores[n] += 25;
+        else if (g >= 5 && g <= 12) numScores[n] += 35;
         else numScores[n] += 10;
       });
 
-      // 점수 순 내림차순 정렬
       const rankedNums = [...parsedNums].sort((a,b) => numScores[b] - numScores[a]);
-
-      // 사용자 번호 중 최우선 회귀 코어 2수 선정
       const customCore = rankedNums.slice(0, 2);
 
       appendLog(`▶ 활성화된 회귀선: <span class="log-line">${topLines.map(l => l + "회귀").join(", ")}</span>`, "log-sub");
       appendLog(`▶ 입력 번호 중 <b>회귀 최우력 핵심 번호:</b> ${formatSet(customCore)}`, "log-win");
 
-      // 3. 사용자 번호 풀 내에서 최적 6수 조합 생성 (지정된 세트 수만큼)
       const finalCombos = [];
       let attempts = 0;
 
       while (finalCombos.length < desiredSets && attempts < 5000) {
         attempts++;
-
-        // 코어 1~2수를 기반으로 나머지 번호 무작위 선택
         const corePickCount = (attempts % 2 === 0) ? 1 : Math.min(2, customCore.length);
         const shuffledCore = [...customCore].sort(() => 0.5 - Math.random());
         const base = shuffledCore.slice(0, corePickCount);
@@ -687,11 +746,9 @@
         const restCandidates = parsedNums.filter(n => !base.includes(n)).sort(() => 0.5 - Math.random());
         const candidateCombo = [...base, ...restCandidates.slice(0, 6 - base.length)].sort((a,b) => a - b);
 
-        // 총합 필터 (번호 개수가 적어서 필터가 너무 빡빡하지 않도록 유연하게 적용)
         const sum = candidateCombo.reduce((a,b) => a + b, 0);
         if (attempts < 2000 && (sum < 95 || sum > 185)) continue;
 
-        // 홀짝 비율 (최소 1:5 ~ 5:1 사이)
         const oddCnt = candidateCombo.filter(n => n % 2 !== 0).length;
         if (attempts < 2000 && (oddCnt === 0 || oddCnt === 6)) continue;
 
@@ -701,14 +758,13 @@
         }
       }
 
-      // 조합 수가 부족한 경우 단순 셔플로 채움
       while (finalCombos.length < desiredSets) {
         const fallback = [...parsedNums].sort(() => 0.5 - Math.random()).slice(0, 6).sort((a,b) => a - b);
         const key = fallback.join(",");
         if (!finalCombos.some(s => s.join(",") === key)) {
           finalCombos.push(fallback);
         } else {
-          finalCombos.push(fallback); // 최후 폴백
+          finalCombos.push(fallback);
           break;
         }
       }
@@ -722,6 +778,213 @@
         const odd = c.filter(n => n % 2 !== 0).length;
         appendLog(`조합 ${idx + 1}: ${formatSet(c)} <span class="tag tag-gold">합:${sumVal}</span> <span class="tag tag-blue">홀${odd}:짝${6-odd}</span>`);
       });
+    }
+
+    // --- [8. 신규 추가: 탭 3 세분화 회귀 조합 생성기] ---
+
+    // 특정 번호 리스트에 대한 회귀 점수 계산 유틸
+    function scoreNumbersByRegression(nums, dataset, topLines) {
+      const totalLen = dataset.length;
+      const scores = {};
+      const gaps = {};
+
+      nums.forEach(n => {
+        scores[n] = 0;
+        let gap = 999;
+        for (let idx = 0; idx < totalLen; idx++) {
+          if (dataset[totalLen - 1 - idx].mainNums.includes(n)) {
+            gap = idx;
+            break;
+          }
+        }
+        gaps[n] = gap;
+      });
+
+      // 회귀선 공명 점수
+      topLines.forEach((line, rank) => {
+        const sourceIdx = totalLen - line;
+        if (sourceIdx >= 0) {
+          const sourceNums = dataset[sourceIdx].mainNums;
+          const weight = (6 - rank) * 12;
+          sourceNums.forEach(n => {
+            if (scores[n] !== undefined) scores[n] += weight;
+          });
+        }
+      });
+
+      // 주기 적시성 점수
+      nums.forEach(n => {
+        const g = gaps[n];
+        if (g <= 4) scores[n] += 30; // 핫/이월
+        else if (g >= 5 && g <= 14) scores[n] += 40; // 골든 주기
+        else scores[n] += 10;
+      });
+
+      // 점수 내림차순 정렬된 번호 배열 반환
+      const sortedNums = [...nums].sort((a,b) => scores[b] - scores[a]);
+      return { sortedNums, scores, gaps };
+    }
+
+    function runSegmentedRegressionCombination() {
+      if (processedAll.length === 0) {
+        alert("먼저 엑셀 데이터 파일을 등록해주세요.");
+        return;
+      }
+
+      // 입력값 파싱
+      const autoNums = parseInputNumbers(document.getElementById("seg-auto-input").value);
+      const linearNums = parseInputNumbers(document.getElementById("seg-linear-input").value);
+      const dragNums = parseInputNumbers(document.getElementById("seg-drag-input").value);
+
+      // 유효성 검증
+      if (autoNums.length !== 3) {
+        alert(`[자동회귀]에는 정확히 3수를 입력해야 합니다.\n(현재 입력: ${autoNums.length}개)`);
+        return;
+      }
+      if (linearNums.length !== 3) {
+        alert(`[선형회귀]에는 정확히 3수를 입력해야 합니다.\n(현재 입력: ${linearNums.length}개)`);
+        return;
+      }
+      if (dragNums.length > 6) {
+        alert(`[드래그]에는 최대 6수까지만 입력할 수 있습니다.\n(현재 입력: ${dragNums.length}개)`);
+        return;
+      }
+
+      // 전체 고유 번호 합집합
+      const totalUnion = [...new Set([...autoNums, ...linearNums, ...dragNums])];
+      const pickCount = parseInt(document.getElementById("seg-pick-count").value);
+      const desiredSets = parseInt(document.getElementById("seg-sets-count").value);
+
+      if (totalUnion.length < pickCount) {
+        alert(`입력된 고유 번호 수(${totalUnion.length}개)가 추천 요청 번호수(${pickCount}수)보다 적습니다.`);
+        return;
+      }
+
+      clearLog();
+      const lastRound = processedAll[processedAll.length - 1].drawNo;
+      const nextRound = lastRound + 1;
+
+      appendLog(`=== [3단계 세분화 회귀 최적 조합기] ===`, "log-title");
+      appendLog(`▶ 데이터 기준: 최근 ${lastRound}회차 | 목표: <b>${nextRound}회차</b>`, "log-info");
+      appendLog(`▶ <b>자동회귀 (3수):</b> [ ${autoNums.join(", ")} ] <span class="tag tag-gold">1~2수 추출</span>`, "log-sub");
+      appendLog(`▶ <b>선형회귀 (3수):</b> [ ${linearNums.join(", ")} ] <span class="tag tag-blue">1~2수 추출</span>`, "log-sub");
+      appendLog(`▶ <b>드래그군 (${dragNums.length}수):</b> [ ${dragNums.length ? dragNums.join(", ") : "미지정"} ] <span class="tag tag-green">0~2수 추출</span>`, "log-sub");
+      appendLog(`▶ 요청 사양: <b>${pickCount}수 추천 / ${desiredSets}세트 생성</b>`, "log-info");
+
+      // 활성 회귀선 및 점수 채점
+      const { topLines } = findActiveRegressionLines(processedAll, 15, 45);
+      const autoRes = scoreNumbersByRegression(autoNums, processedAll, topLines);
+      const linearRes = scoreNumbersByRegression(linearNums, processedAll, topLines);
+      const dragRes = scoreNumbersByRegression(dragNums, processedAll, topLines);
+
+      appendLog(`▶ 활성 회귀선: <span class="log-line">${topLines.map(l => l + "회귀").join(", ")}</span>`, "log-sub");
+      appendLog(`▶ 각 군별 회귀 최우선 유력수:`, "log-win");
+      appendLog(`&nbsp;&nbsp;• 자동회귀 1순위: ${getBallHtml(autoRes.sortedNums[0])} (점수: ${autoRes.scores[autoRes.sortedNums[0]]}점)`);
+      appendLog(`&nbsp;&nbsp;• 선형회귀 1순위: ${getBallHtml(linearRes.sortedNums[0])} (점수: ${linearRes.scores[linearRes.sortedNums[0]]}점)`);
+      if (dragNums.length > 0) {
+        appendLog(`&nbsp;&nbsp;• 드래그군 1순위: ${getBallHtml(dragRes.sortedNums[0])} (점수: ${dragRes.scores[dragRes.sortedNums[0]]}점)`);
+      }
+
+      // 조합 생성 알고리즘
+      // 원칙: 자동 1~2수 + 선형 1~2수 + 드래그 0~2수 (회귀 상위 우선순위 가중 추첨)
+      const finalCombos = [];
+      let attempts = 0;
+
+      while (finalCombos.length < desiredSets && attempts < 5000) {
+        attempts++;
+
+        // 자동회귀군에서 1~2수 선택 (상위수 가중)
+        const autoPickCount = (attempts % 2 === 0) ? 1 : 2;
+        const autoPicked = pickWeighted(autoRes.sortedNums, autoPickCount);
+
+        // 선형회귀군에서 1~2수 선택
+        const linearPickCount = (attempts % 3 === 0) ? 2 : 1;
+        const linearPicked = pickWeighted(linearRes.sortedNums, linearPickCount);
+
+        let merged = [...new Set([...autoPicked, ...linearPicked])];
+
+        // 드래그군에서 보충 (드래그군이 있을 경우 1~2수 투입)
+        if (dragNums.length > 0 && merged.length < pickCount) {
+          const needed = Math.min(dragNums.length, pickCount - merged.length);
+          const dragPickCount = Math.min(needed, (attempts % 2 === 0 ? 1 : 2));
+          const dragCandidates = dragRes.sortedNums.filter(n => !merged.includes(n));
+          const dragPicked = pickWeighted(dragCandidates, dragPickCount);
+          merged = [...new Set([...merged, ...dragPicked])];
+        }
+
+        // 그래도 목표수(pickCount)에 미달하면, 남은 입력 전체 중에서 회귀점수 높은 순으로 채움
+        if (merged.length < pickCount) {
+          const remainingAll = totalUnion.filter(n => !merged.includes(n));
+          // 전체 중 회귀점수 상위 정렬
+          const allRes = scoreNumbersByRegression(remainingAll, processedAll, topLines);
+          const fillers = allRes.sortedNums.slice(0, pickCount - merged.length);
+          merged.push(...fillers);
+        }
+
+        // 목표수보다 많으면 초과분 제거 (자동/선형 1순위는 반드시 사수)
+        if (merged.length > pickCount) {
+          merged = merged.slice(0, pickCount);
+        }
+
+        const candidate = merged.sort((a,b) => a - b);
+
+        // 6수 추천일 때만 표준 로또 필터 적용
+        if (pickCount === 6) {
+          const sum = candidate.reduce((a,b) => a + b, 0);
+          if (attempts < 2500 && (sum < 95 || sum > 185)) continue;
+          const oddCnt = candidate.filter(n => n % 2 !== 0).length;
+          if (attempts < 2500 && (oddCnt === 0 || oddCnt === 6)) continue;
+        }
+
+        const key = candidate.join(",");
+        if (!finalCombos.some(s => s.join(",") === key)) {
+          finalCombos.push(candidate);
+        }
+      }
+
+      // 조합이 모자랄 경우 단순 셔플 보충
+      while (finalCombos.length < desiredSets) {
+        const shuffled = [...totalUnion].sort(() => 0.5 - Math.random()).slice(0, pickCount).sort((a,b) => a - b);
+        const key = shuffled.join(",");
+        if (!finalCombos.some(s => s.join(",") === key)) {
+          finalCombos.push(shuffled);
+        } else {
+          finalCombos.push(shuffled);
+          break;
+        }
+      }
+
+      // 최종 출력
+      appendLog(`<br>========================================`, "log-sub");
+      appendLog(`★ <b>[3단계 세분화 회귀 최적 ${pickCount}수 추천 / ${desiredSets}세트 결과]</b> ★`, "log-title");
+      appendLog(`========================================`, "log-sub");
+
+      finalCombos.forEach((c, idx) => {
+        const sumVal = c.reduce((a,b) => a + b, 0);
+        const odd = c.filter(n => n % 2 !== 0).length;
+        appendLog(`추천 ${idx + 1}: ${formatSet(c)} <span class="tag tag-gold">합:${sumVal}</span> <span class="tag tag-blue">홀${odd}:짝${c.length-odd}</span>`);
+      });
+    }
+
+    // 상위 우선순위 기반 가중 추첨 헬퍼 함수
+    function pickWeighted(sortedArr, count) {
+      if (!sortedArr || sortedArr.length === 0) return [];
+      if (sortedArr.length <= count) return [...sortedArr];
+
+      // 첫 번째(1순위)는 80% 확률로 무조건 채택
+      const result = [];
+      const pool = [...sortedArr];
+
+      if (Math.random() < 0.8) {
+        result.push(pool.shift());
+      }
+
+      while (result.length < count && pool.length > 0) {
+        // 남은 풀 중에서 랜덤 추출
+        const idx = Math.floor(Math.random() * pool.length);
+        result.push(pool.splice(idx, 1)[0]);
+      }
+      return result;
     }
   </script>
 </body>
