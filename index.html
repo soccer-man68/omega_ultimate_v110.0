@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>OMEGA REGRESSION PRO v112.1</title>
+  <title>OMEGA REGRESSION PRO v112.2</title>
   <!-- 엑셀(.xlsx) 파일 파싱 라이브러리 CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
@@ -167,7 +167,7 @@
   <div id="lock-screen">
     <div class="lock-box">
       <div class="lock-title">OMEGA REGRESSION</div>
-      <div class="lock-sub">정통 유효 회귀선 엔진 v112.1</div>
+      <div class="lock-sub">정통 유효 회귀선 엔진 v112.2</div>
       <input type="password" id="pin-field" class="pin-input" maxlength="4" placeholder="••••" pattern="[0-9]*" inputmode="numeric">
       <button class="pin-btn" onclick="checkPin()">인증 및 접속</button>
       <div id="err-text" class="err-msg">비밀번호가 일치하지 않습니다.</div>
@@ -177,7 +177,7 @@
   <!-- [메인 어플리케이션 화면] -->
   <div id="app-container">
     <header>
-      <h1>OMEGA REGRESSION PRO v112.1</h1>
+      <h1>OMEGA REGRESSION PRO v112.2</h1>
       <p>Active Regression Lines & Zone Quota System</p>
     </header>
 
@@ -243,7 +243,7 @@
         </button>
       </div>
 
-      <!-- [탭 3: 신규 3단계 세분화 회귀 조합기] -->
+      <!-- [탭 3: 신규 3단계 세분화 회귀 조합기 (선형회귀 최대 6수 지원)] -->
       <div id="tab-content-segmented" class="tab-content">
         <div class="card">
           <span class="input-box-label">🔀 3단계 회귀 그룹별 번호 입력</span>
@@ -257,13 +257,13 @@
             <input type="text" id="seg-auto-input" class="seg-input" placeholder="예: 3, 14, 25">
           </div>
 
-          <!-- 선형회귀 입력칸 (최대 6수) -->
+          <!-- 선형회귀 입력칸 (수정: 1~6수 입력 가능) -->
           <div class="seg-group">
-           <div class="seg-label">
-             <span>② 선형회귀군 (최대 6수 입력)</span>
-             <span style="color:var(--accent-cyan);">1~3수 추출</span>
-           </div>
-           <input type="text" id="seg-linear-input" class="seg-input" placeholder="예: 7, 12, 18, 25, 32, 41">
+            <div class="seg-label">
+              <span>② 선형회귀군 (1수 ~ 최대 6수 입력)</span>
+              <span style="color:var(--accent-cyan);">1~3수 추출</span>
+            </div>
+            <input type="text" id="seg-linear-input" class="seg-input" placeholder="예: 7, 12, 18, 25, 32, 41 (1~6개)">
           </div>
 
           <!-- 드래그/자유군 입력칸 (0~6수) -->
@@ -780,7 +780,7 @@
       });
     }
 
-    // --- [8. 탭 3 세분화 회귀 조합 생성기 (1~3수 / 1~3수 / 0~3수 분배)] ---
+    // --- [8. 탭 3 세분화 회귀 조합 생성기 (선형회귀 1~6수 지원, 각 1~3수 추출)] ---
 
     function scoreNumbersByRegression(nums, dataset, topLines) {
       const totalLen = dataset.length;
@@ -827,10 +827,12 @@
         return;
       }
 
+      // 번호 파싱
       const autoNums = parseInputNumbers(document.getElementById("seg-auto-input").value);
       const linearNums = parseInputNumbers(document.getElementById("seg-linear-input").value);
       const dragNums = parseInputNumbers(document.getElementById("seg-drag-input").value);
 
+      // 유효성 검증
       if (autoNums.length !== 3) {
         alert(`[자동회귀]에는 정확히 3수를 입력해야 합니다.\n(현재 입력: ${autoNums.length}개)`);
         return;
@@ -838,7 +840,6 @@
       if (linearNums.length < 1 || linearNums.length > 6) {
         alert(`[선형회귀]에는 1수에서 최대 6수까지 입력해야 합니다.\n(현재 입력: ${linearNums.length}개)`);
         return;
-      }
       }
       if (dragNums.length > 6) {
         alert(`[드래그]에는 최대 6수까지만 입력할 수 있습니다.\n(현재 입력: ${dragNums.length}개)`);
@@ -858,7 +859,7 @@
       const lastRound = processedAll[processedAll.length - 1].drawNo;
       const nextRound = lastRound + 1;
 
-      appendLog(`=== [3단계 세분화 회귀 최적 조합기 v112.1] ===`, "log-title");
+      appendLog(`=== [3단계 세분화 회귀 최적 조합기 v112.2] ===`, "log-title");
       appendLog(`▶ 데이터 기준: 최근 ${lastRound}회차 | 목표: <b>${nextRound}회차</b>`, "log-info");
       appendLog(`▶ <b>자동회귀 (3수):</b> [ ${autoNums.join(", ")} ] <span class="tag tag-gold">1~3수 추출</span>`, "log-sub");
       appendLog(`▶ <b>선형회귀 (${linearNums.length}수):</b> [ ${linearNums.join(", ")} ] <span class="tag tag-blue">1~3수 추출</span>`, "log-sub");
@@ -887,7 +888,6 @@
         attempts++;
 
         // 1. 자동회귀군 추출 (1~3수): 회귀 상위수 중심 가중
-        // 1수: 45%, 2수: 40%, 3수: 15% 비율
         const rA = Math.random();
         const autoCount = rA < 0.45 ? 1 : (rA < 0.85 ? 2 : 3);
         const autoPicked = pickWeighted(autoRes.sortedNums, Math.min(autoCount, pickCount));
@@ -902,11 +902,10 @@
 
         let merged = [...autoPicked, ...linearPicked];
 
-        // 3. 드래그군 추출 (0~3수): 남은 자리가 있고 드래그군이 입력된 경우
+        // 3. 드래그군 추출 (0~3수)
         if (dragNums.length > 0 && merged.length < pickCount) {
           const needed = pickCount - merged.length;
           const rD = Math.random();
-          // 0수(20%), 1수(40%), 2수(30%), 3수(10%)
           const dragTargetCount = rD < 0.2 ? 0 : (rD < 0.6 ? 1 : (rD < 0.9 ? 2 : 3));
           const dragCount = Math.min(dragTargetCount, Math.min(needed, 3));
           
@@ -930,10 +929,10 @@
           merged = merged.slice(0, pickCount);
         }
 
-        // 최종 가독성 및 마킹을 위해 오름차순 정렬
+        // 가독성을 위한 오름차순 정렬
         const candidate = merged.sort((a,b) => a - b);
 
-        // 6수 추천일 때만 표준 필터(합계 95~185, 홀짝 몰림 배제) 검증
+        // 6수 추천일 때 표준 필터 검증 (합계 95~185, 홀짝 몰림 배제)
         if (pickCount === 6) {
           const sum = candidate.reduce((a,b) => a + b, 0);
           if (attempts < 2500 && (sum < 95 || sum > 185)) continue;
@@ -947,7 +946,7 @@
         }
       }
 
-      // 조합 모자란 경우 폴백
+      // 모자란 경우 폴백
       while (finalCombos.length < desiredSets) {
         const shuffled = [...totalUnion].sort(() => 0.5 - Math.random()).slice(0, pickCount).sort((a,b) => a - b);
         const key = shuffled.join(",");
@@ -959,7 +958,7 @@
         }
       }
 
-      // 최종 결과 출력 (오름차순 볼 정렬 + 기본 분석 통계)
+      // 최종 결과 출력
       appendLog(`<br>========================================`, "log-sub");
       appendLog(`★ <b>[3단계 세분화 회귀 최적 ${pickCount}수 추천 / ${desiredSets}세트 결과]</b> ★`, "log-title");
       appendLog(`========================================`, "log-sub");
