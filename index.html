@@ -257,13 +257,13 @@
             <input type="text" id="seg-auto-input" class="seg-input" placeholder="예: 3, 14, 25">
           </div>
 
-          <!-- 선형회귀 입력칸 (3수) -->
+          <!-- 선형회귀 입력칸 (최대 6수) -->
           <div class="seg-group">
-            <div class="seg-label">
-              <span>② 선형회귀군 (정확히 3수)</span>
-              <span style="color:var(--accent-cyan);">1~3수 추출</span>
-            </div>
-            <input type="text" id="seg-linear-input" class="seg-input" placeholder="예: 7, 18, 32">
+           <div class="seg-label">
+             <span>② 선형회귀군 (최대 6수 입력)</span>
+             <span style="color:var(--accent-cyan);">1~3수 추출</span>
+           </div>
+           <input type="text" id="seg-linear-input" class="seg-input" placeholder="예: 7, 12, 18, 25, 32, 41">
           </div>
 
           <!-- 드래그/자유군 입력칸 (0~6수) -->
@@ -835,9 +835,10 @@
         alert(`[자동회귀]에는 정확히 3수를 입력해야 합니다.\n(현재 입력: ${autoNums.length}개)`);
         return;
       }
-      if (linearNums.length !== 3) {
-        alert(`[선형회귀]에는 정확히 3수를 입력해야 합니다.\n(현재 입력: ${linearNums.length}개)`);
+      if (linearNums.length < 1 || linearNums.length > 6) {
+        alert(`[선형회귀]에는 1수에서 최대 6수까지 입력해야 합니다.\n(현재 입력: ${linearNums.length}개)`);
         return;
+      }
       }
       if (dragNums.length > 6) {
         alert(`[드래그]에는 최대 6수까지만 입력할 수 있습니다.\n(현재 입력: ${dragNums.length}개)`);
@@ -860,7 +861,7 @@
       appendLog(`=== [3단계 세분화 회귀 최적 조합기 v112.1] ===`, "log-title");
       appendLog(`▶ 데이터 기준: 최근 ${lastRound}회차 | 목표: <b>${nextRound}회차</b>`, "log-info");
       appendLog(`▶ <b>자동회귀 (3수):</b> [ ${autoNums.join(", ")} ] <span class="tag tag-gold">1~3수 추출</span>`, "log-sub");
-      appendLog(`▶ <b>선형회귀 (3수):</b> [ ${linearNums.join(", ")} ] <span class="tag tag-blue">1~3수 추출</span>`, "log-sub");
+      appendLog(`▶ <b>선형회귀 (${linearNums.length}수):</b> [ ${linearNums.join(", ")} ] <span class="tag tag-blue">1~3수 추출</span>`, "log-sub");
       appendLog(`▶ <b>드래그군 (${dragNums.length}수):</b> [ ${dragNums.length ? dragNums.join(", ") : "미지정"} ] <span class="tag tag-green">0~3수 추출</span>`, "log-sub");
       appendLog(`▶ 요청 사양: <b>${pickCount}수 추천 / ${desiredSets}세트 생성</b>`, "log-info");
 
