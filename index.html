@@ -251,10 +251,10 @@
           <!-- 자동회귀 입력칸 (3수) -->
           <div class="seg-group">
             <div class="seg-label">
-              <span>① 자동회귀군 (정확히 3수)</span>
+              <span>① 자동회귀군 (1수~3수 입력)</span>
               <span style="color:var(--accent-gold);">1~3수 추출</span>
             </div>
-            <input type="text" id="seg-auto-input" class="seg-input" placeholder="예: 3, 14, 25">
+            <input type="text" id="seg-auto-input" class="seg-input" placeholder="예: 3 (1수~최대3수">
           </div>
 
           <!-- 선형회귀 입력칸 (수정: 1~6수 입력 가능) -->
@@ -833,8 +833,8 @@
       const dragNums = parseInputNumbers(document.getElementById("seg-drag-input").value);
 
       // 유효성 검증
-      if (autoNums.length !== 3) {
-        alert(`[자동회귀]에는 정확히 3수를 입력해야 합니다.\n(현재 입력: ${autoNums.length}개)`);
+      if (autoNums.length < 1 || autoNums.length > 3) {
+        alert(`[자동회귀]에는 1수에서 최대 3수까지 입력해야 합니다.\n(현재 입력: ${autoNums.length}개)`);
         return;
       }
       if (linearNums.length < 1 || linearNums.length > 6) {
