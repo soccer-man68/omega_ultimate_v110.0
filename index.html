@@ -266,13 +266,13 @@
             <input type="text" id="seg-linear-input" class="seg-input" placeholder="예: 7, 12, 18, 25, 32, 41 (1~6개)">
           </div>
 
-          <!-- 드래그/자유군 입력칸 (0~6수) -->
+          <!-- 드래그/자유군 입력칸 (0~7수) -->
           <div class="seg-group" style="margin-bottom: 4px;">
             <div class="seg-label">
-              <span>③ 드래그군 (0수 ~ 최대 6수 선택)</span>
+              <span>③ 드래그군 (0수 ~ 최대 7수 선택)</span>
               <span style="color:var(--accent-green);">0~3수 추출</span>
             </div>
-            <input type="text" id="seg-drag-input" class="seg-input" placeholder="예: 11, 23, 40 (비워둬도 무방)">
+            <input type="text" id="seg-drag-input" class="seg-input" placeholder="예: 11, 23, 31, 40 (최대 7개, 비워둬도 무방)">
           </div>
 
           <!-- 추천수 및 세트수 선택 -->
@@ -841,8 +841,8 @@
         alert(`[선형회귀]에는 1수에서 최대 6수까지 입력해야 합니다.\n(현재 입력: ${linearNums.length}개)`);
         return;
       }
-      if (dragNums.length > 6) {
-        alert(`[드래그]에는 최대 6수까지만 입력할 수 있습니다.\n(현재 입력: ${dragNums.length}개)`);
+      if (dragNums.length > 7) {
+        alert(`[드래그]에는 최대 7수까지만 입력할 수 있습니다.\n(현재 입력: ${dragNums.length}개)`);
         return;
       }
 
